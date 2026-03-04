@@ -82,14 +82,18 @@ let currentOpacity = 0;
 let hoverActive = false;
 let pulseTime = 0;
 
+// Correct raw GitHub URL
+const geojsonURL = 'https://raw.githubusercontent.com/jantonoff/City-of-Tamarac/main/city_boundary.geojson';
+
 map.on('load', () => {
 
-  // 🔹 Use the raw GitHub URL for GeoJSON
+  // Add GeoJSON source
   map.addSource('city-boundary', {
     type: 'geojson',
-    data: 'https://raw.githubusercontent.com/jantonoff/City-of-Tamarac/refs/heads/main/city_boundary.geojson'
+    data: geojsonURL
   });
 
+  // Main polygon
   map.addLayer({
     id: 'city-layer',
     type: 'fill',
@@ -97,6 +101,7 @@ map.on('load', () => {
     paint: { 'fill-color': '#e63946', 'fill-opacity': 0.5 }
   });
 
+  // Hover fill
   map.addLayer({
     id: 'city-layer-hover-fill',
     type: 'fill',
@@ -105,6 +110,7 @@ map.on('load', () => {
     filter: ['==', 'cityname', '']
   });
 
+  // Glow outline
   map.addLayer({
     id: 'city-layer-hover-outline-glow',
     type: 'line',
@@ -113,6 +119,7 @@ map.on('load', () => {
     filter: ['==', 'cityname', '']
   });
 
+  // Crisp outline
   map.addLayer({
     id: 'city-layer-hover-outline',
     type: 'line',
@@ -122,7 +129,7 @@ map.on('load', () => {
   });
 
   // Fit map to bounds
-  fetch('RAW_GITHUB_URL_TO_YOUR_GEOJSON')
+  fetch(geojsonURL)
     .then(r => r.json())
     .then(data => {
       const coords = data.features.flatMap(f => f.geometry.coordinates.flat(2));
@@ -133,13 +140,16 @@ map.on('load', () => {
       map.fitBounds([sw, ne], { padding: 40 });
     });
 
-  // Popup
+  // Popup on click
   map.on('click', 'city-layer', (e) => {
     const cityName = e.features[0].properties.cityname || 'N/A';
-    new mapboxgl.Popup().setLngLat(e.lngLat).setHTML(`<strong>City Name:</strong> ${cityName}`).addTo(map);
+    new mapboxgl.Popup()
+      .setLngLat(e.lngLat)
+      .setHTML(`<strong>City Name:</strong> ${cityName}`)
+      .addTo(map);
   });
 
-  // Cursor
+  // Cursor pointer on hover
   map.on('mouseenter', 'city-layer', () => { map.getCanvas().style.cursor = 'pointer'; });
   map.on('mouseleave', 'city-layer', () => { map.getCanvas().style.cursor = ''; });
 
@@ -189,7 +199,4 @@ map.on('load', () => {
 </script>
 
 </body>
-
 </html>
-
-

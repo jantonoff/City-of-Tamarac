@@ -2,7 +2,7 @@
 <html>
 <head>
   <meta charset="utf-8">
-  <title>City Boundary Map</title>
+  <title>City Boundary 3D Map</title>
 
   <link href="https://api.mapbox.com/mapbox-gl-js/v3.0.0/mapbox-gl.css" rel="stylesheet" />
 
@@ -70,11 +70,14 @@
 <script>
 mapboxgl.accessToken = 'pk.eyJ1IjoiamFudG9ub2ZmIiwiYSI6ImNtbWM4dTJ2bTAzczUycnB3aDd2OXhhdjQifQ.5_JYLcmgG0IZ0tn__dR93A';
 
+const geojsonURL = 'https://raw.githubusercontent.com/jantonoff/City-of-Tamarac/main/city_boundary.geojson';
+
 const map = new mapboxgl.Map({
   container: 'map',
   style: 'mapbox://styles/mapbox/streets-v12',
-  center: [-80.1918, 25.7617],
-  zoom: 10
+  pitch: 45,
+  bearing: -17.6,
+  antialias: true
 });
 
 let targetOpacity = 0;
@@ -82,18 +85,15 @@ let currentOpacity = 0;
 let hoverActive = false;
 let pulseTime = 0;
 
-// Correct raw GitHub URL
-const geojsonURL = 'https://raw.githubusercontent.com/jantonoff/City-of-Tamarac/main/city_boundary.geojson';
-
 map.on('load', () => {
 
-  // Add GeoJSON source
+  // Add city boundary GeoJSON
   map.addSource('city-boundary', {
     type: 'geojson',
     data: geojsonURL
   });
 
-  // Main polygon
+  // Main city polygon
   map.addLayer({
     id: 'city-layer',
     type: 'fill',
@@ -101,7 +101,7 @@ map.on('load', () => {
     paint: { 'fill-color': '#e63946', 'fill-opacity': 0.5 }
   });
 
-  // Hover fill
+  // Hover layers
   map.addLayer({
     id: 'city-layer-hover-fill',
     type: 'fill',
@@ -110,7 +110,6 @@ map.on('load', () => {
     filter: ['==', 'cityname', '']
   });
 
-  // Glow outline
   map.addLayer({
     id: 'city-layer-hover-outline-glow',
     type: 'line',
@@ -119,7 +118,6 @@ map.on('load', () => {
     filter: ['==', 'cityname', '']
   });
 
-  // Crisp outline
   map.addLayer({
     id: 'city-layer-hover-outline',
     type: 'line',
@@ -128,7 +126,37 @@ map.on('load', () => {
     filter: ['==', 'cityname', '']
   });
 
-  // Fit map to bounds
+  // 3D Buildings
+  map.addLayer({
+    id: '3d-buildings',
+    source: 'composite',
+    'source-layer': 'building',
+    filter: ['==', 'extrude', 'true'],
+    type: 'fill-extrusion',
+    minzoom: 15,
+    paint: {
+      'fill-extrusion-color': '#aaa',
+      'fill-extrusion-height': ['interpolate', ['linear'], ['zoom'], 15, 0, 15.05, ['get', 'height']],
+      'fill-extrusion-base': ['get', 'min_height'],
+      'fill-extrusion-opacity': 0.6
+    }
+  });
+
+  // 3D Trees
+  map.addLayer({
+    id: '3d-trees',
+    source: 'composite',
+    'source-layer': 'tree',
+    type: 'circle',
+    minzoom: 14,
+    paint: {
+      'circle-radius': 4,
+      'circle-color': '#2d6a4f',
+      'circle-opacity': 0.7
+    }
+  });
+
+  // Fit map to city boundary
   fetch(geojsonURL)
     .then(r => r.json())
     .then(data => {
@@ -149,7 +177,7 @@ map.on('load', () => {
       .addTo(map);
   });
 
-  // Cursor pointer on hover
+  // Cursor pointer
   map.on('mouseenter', 'city-layer', () => { map.getCanvas().style.cursor = 'pointer'; });
   map.on('mouseleave', 'city-layer', () => { map.getCanvas().style.cursor = ''; });
 

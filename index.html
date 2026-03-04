@@ -2,10 +2,10 @@
 <html>
 <head>
 <meta charset="utf-8">
-<title>Tamarac 2D City Map with 3D Buildings</title>
-<link href="https://api.mapbox.com/mapbox-gl-js/v3.0.0/mapbox-gl.css" rel="stylesheet" />
+<title>Tamarac 2D Polygon + 3D Buildings</title>
+<link href="https://api.mapbox.com/mapbox-gl-js/v3.0.0/mapbox-gl.css" rel="stylesheet"/>
 <style>
-  body { margin:0; padding:0; font-family:Arial, sans-serif; }
+  body { margin:0; padding:0; font-family: Arial,sans-serif; }
   #header {
     position:fixed; top:0; left:0; width:100%; height:60px;
     background-color:#007ea8; display:flex; align-items:center;
@@ -45,12 +45,13 @@
 <script src="https://api.mapbox.com/mapbox-gl-js/v3.0.0/mapbox-gl.js"></script>
 <script>
 mapboxgl.accessToken = 'pk.eyJ1IjoiamFudG9ub2ZmIiwiYSI6ImNtbWNobmt3aDAycmczMXB1Y2pjZ3FnMHcifQ.b2d4BLzSWRZN1VpcEBuIeQ';
+
 const geojsonURL = 'https://raw.githubusercontent.com/jantonoff/City-of-Tamarac/main/city_boundary.geojson';
-let targetOpacity=0, currentOpacity=0, hoverActive=false, pulseTime=0;
+let targetOpacity = 0, currentOpacity = 0, hoverActive = false, pulseTime = 0;
 
 const map = new mapboxgl.Map({
-  container:'map',
-  style:'mapbox://styles/mapbox/streets-v12',
+  container: 'map',
+  style: 'mapbox://styles/mapbox/streets-v12',
   pitch:45,
   bearing:-17.6,
   antialias:true
@@ -64,8 +65,47 @@ map.addControl(new mapboxgl.GeolocateControl({
   showUserHeading:true
 }), 'top-left');
 
-// Add 3D buildings from Mapbox vector tiles
-map.on('style.load', () => {
+// Add city polygon and hover
+map.on('load', async () => {
+
+  // 1️⃣ Add city polygon source
+  map.addSource('city-boundary', { type:'geojson', data: geojsonURL });
+
+  // 2️⃣ Add 2D fill polygon
+  map.addLayer({
+    id:'city-layer',
+    type:'fill',
+    source:'city-boundary',
+    paint:{'fill-color':'#e63946','fill-opacity':0.5}
+  });
+
+  // 3️⃣ Hover fill and outline
+  map.addLayer({
+    id:'city-layer-hover-fill',
+    type:'fill',
+    source:'city-boundary',
+    paint:{'fill-color':'#f1faee','fill-opacity':0},
+    filter:['==','cityname','']
+  });
+  map.addLayer({
+    id:'city-layer-hover-outline',
+    type:'line',
+    source:'city-boundary',
+    paint:{'line-color':'#f1faee','line-width':3,'line-opacity':1},
+    filter:['==','cityname','']
+  });
+
+  // 4️⃣ Fit map to city polygon
+  const response = await fetch(geojsonURL);
+  const data = await response.json();
+  const coords = data.features.flatMap(f=>f.geometry.coordinates.flat(2));
+  const lats = coords.filter((_,i)=>i%2===1);
+  const lngs = coords.filter((_,i)=>i%2===0);
+  const sw = [Math.min(...lngs), Math.min(...lats)];
+  const ne = [Math.max(...lngs), Math.max(...lats)];
+  map.fitBounds([sw,ne], {padding:40});
+
+  // 5️⃣ Add Mapbox default 3D buildings (extrusions)
   const layers = map.getStyle().layers;
   const labelLayerId = layers.find(l => l.type === 'symbol')?.id;
   if(labelLayerId){
@@ -86,43 +126,6 @@ map.on('style.load', () => {
   }
 });
 
-// Load city boundary
-map.on('load', () => {
-  map.addSource('city-boundary',{type:'geojson',data:geojsonURL});
-
-  map.addLayer({
-    id:'city-layer',
-    type:'fill',
-    source:'city-boundary',
-    paint:{'fill-color':'#e63946','fill-opacity':0.5}
-  });
-
-  map.addLayer({
-    id:'city-layer-hover-fill',
-    type:'fill',
-    source:'city-boundary',
-    paint:{'fill-color':'#f1faee','fill-opacity':0},
-    filter:['==','cityname','']
-  });
-  map.addLayer({
-    id:'city-layer-hover-outline',
-    type:'line',
-    source:'city-boundary',
-    paint:{'line-color':'#f1faee','line-width':3,'line-opacity':1},
-    filter:['==','cityname','']
-  });
-
-  // Fit map to city boundary
-  fetch(geojsonURL).then(r=>r.json()).then(data=>{
-    const coords = data.features.flatMap(f=>f.geometry.coordinates.flat(2));
-    const lats = coords.filter((_,i)=>i%2===1);
-    const lngs = coords.filter((_,i)=>i%2===0);
-    const sw = [Math.min(...lngs), Math.min(...lats)];
-    const ne = [Math.max(...lngs), Math.max(...lats)];
-    map.fitBounds([sw,ne],{padding:40});
-  });
-});
-
 // Popups
 map.on('click','city-layer', e=>{
   const cityName=e.features[0].properties.cityname || 'N/A';
@@ -134,19 +137,19 @@ map.on('mouseenter','city-layer',()=>map.getCanvas().style.cursor='pointer');
 map.on('mouseleave','city-layer',()=>map.getCanvas().style.cursor='');
 map.on('mousemove','city-layer', e=>{
   if(e.features.length>0){
-    const cityName=e.features[0].properties.cityname;
-    ['city-layer-hover-fill','city-layer-hover-outline'].forEach(l=>map.setFilter(l,['==','cityname',cityName]));
-    targetOpacity=0.3; hoverActive=true;
+    const cityName = e.features[0].properties.cityname;
+    ['city-layer-hover-fill','city-layer-hover-outline'].forEach(l => map.setFilter(l,['==','cityname',cityName]));
+    targetOpacity = 0.3; hoverActive = true;
   }
 });
 map.on('mouseleave','city-layer', ()=>{
-  ['city-layer-hover-fill','city-layer-hover-outline'].forEach(l=>map.setFilter(l,['==','cityname','']));
-  targetOpacity=0; hoverActive=false;
+  ['city-layer-hover-fill','city-layer-hover-outline'].forEach(l => map.setFilter(l,['==','cityname','']));
+  targetOpacity = 0; hoverActive = false;
 });
 
-// Animate hover fill
+// Animate hover
 function animate(){
-  currentOpacity+=(targetOpacity-currentOpacity)*0.1;
+  currentOpacity += (targetOpacity - currentOpacity)*0.1;
   map.setPaintProperty('city-layer-hover-fill','fill-opacity',currentOpacity);
   requestAnimationFrame(animate);
 }
@@ -155,8 +158,8 @@ animate();
 // Basemap switcher
 document.getElementById('basemap').addEventListener('change', function(){
   map.setStyle(this.value);
-  map.once('style.load', ()=>{
-    map.addSource('city-boundary',{type:'geojson',data:geojsonURL});
+  map.once('style.load', () => {
+    map.addSource('city-boundary', {type:'geojson', data:geojsonURL});
     map.addLayer({
       id:'city-layer',
       type:'fill',

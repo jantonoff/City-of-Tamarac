@@ -2,14 +2,13 @@
 <html>
 <head>
   <meta charset="utf-8">
-  <title>City Boundary 3D Map</title>
+  <title>City Boundary 3D Map - Fake 3D</title>
 
   <link href="https://api.mapbox.com/mapbox-gl-js/v3.0.0/mapbox-gl.css" rel="stylesheet" />
 
   <style>
     body { margin: 0; padding: 0; font-family: Arial, sans-serif; }
-    
-    /* Header styling */
+
     #header {
       position: fixed;
       top: 0;
@@ -24,17 +23,9 @@
       box-shadow: 0 2px 6px rgba(0,0,0,0.15);
       z-index: 10;
     }
-    #header img {
-      height: 40px;
-      margin-right: 15px;
-    }
-    #header h1 {
-      font-size: 20px;
-      margin: 0;
-      color: #ffffff;
-    }
+    #header img { height: 40px; margin-right: 15px; }
+    #header h1 { font-size: 20px; margin: 0; color: #ffffff; }
 
-    /* Map container */
     #map {
       position: absolute;
       top: 60px;
@@ -42,7 +33,6 @@
       width: 100%;
     }
 
-    /* Styled popup */
     .mapboxgl-popup-content {
       font-size: 14px;
       padding: 10px;
@@ -87,13 +77,12 @@ let pulseTime = 0;
 
 map.on('load', () => {
 
-  // Add city boundary GeoJSON
+  // City boundary
   map.addSource('city-boundary', {
     type: 'geojson',
     data: geojsonURL
   });
 
-  // Main city polygon
   map.addLayer({
     id: 'city-layer',
     type: 'fill',
@@ -101,7 +90,6 @@ map.on('load', () => {
     paint: { 'fill-color': '#e63946', 'fill-opacity': 0.5 }
   });
 
-  // Hover layers
   map.addLayer({
     id: 'city-layer-hover-fill',
     type: 'fill',
@@ -126,40 +114,64 @@ map.on('load', () => {
     filter: ['==', 'cityname', '']
   });
 
-  // 3D Buildings
-  map.addLayer({
-    id: '3d-buildings',
-    source: 'composite',
-    'source-layer': 'building',
-    filter: ['==', 'extrude', 'true'],
-    type: 'fill-extrusion',
-    minzoom: 15,
-    paint: {
-      'fill-extrusion-color': '#aaa',
-      'fill-extrusion-height': ['interpolate', ['linear'], ['zoom'], 15, 0, 15.05, ['get', 'height']],
-      'fill-extrusion-base': ['get', 'min_height'],
-      'fill-extrusion-opacity': 0.6
-    }
-  });
-
-  // 3D Trees
-  map.addLayer({
-    id: '3d-trees',
-    source: 'composite',
-    'source-layer': 'tree',
-    type: 'circle',
-    minzoom: 14,
-    paint: {
-      'circle-radius': 4,
-      'circle-color': '#2d6a4f',
-      'circle-opacity': 0.7
-    }
-  });
-
-  // Fit map to city boundary
+  // Fake 3D buildings
   fetch(geojsonURL)
     .then(r => r.json())
     .then(data => {
+      const buildings = {
+        type: 'FeatureCollection',
+        features: data.features.map(f => {
+          return {
+            type: 'Feature',
+            geometry: f.geometry,
+            properties: { height: Math.random() * 50 + 10 } // random height 10-60 meters
+          };
+        })
+      };
+      map.addSource('fake-buildings', { type: 'geojson', data: buildings });
+      map.addLayer({
+        id: 'fake-buildings-layer',
+        type: 'fill-extrusion',
+        source: 'fake-buildings',
+        paint: {
+          'fill-extrusion-color': '#888',
+          'fill-extrusion-height': ['get', 'height'],
+          'fill-extrusion-opacity': 0.6
+        }
+      });
+
+      // Fake trees
+      const treePoints = {
+        type: 'FeatureCollection',
+        features: data.features.flatMap(f => {
+          // randomly scatter some "tree" points inside the polygon
+          const coords = f.geometry.coordinates[0];
+          const trees = [];
+          for (let i = 0; i < 10; i++) {
+            const lng = coords[0][0] + Math.random() * 0.01;
+            const lat = coords[0][1] + Math.random() * 0.01;
+            trees.push({
+              type: 'Feature',
+              geometry: { type: 'Point', coordinates: [lng, lat] },
+              properties: { height: Math.random() * 5 + 2 }
+            });
+          }
+          return trees;
+        })
+      };
+      map.addSource('fake-trees', { type: 'geojson', data: treePoints });
+      map.addLayer({
+        id: 'fake-trees-layer',
+        type: 'fill-extrusion',
+        source: 'fake-trees',
+        paint: {
+          'fill-extrusion-color': '#2d6a4f',
+          'fill-extrusion-height': ['get', 'height'],
+          'fill-extrusion-opacity': 0.8
+        }
+      });
+
+      // Fit map to city boundary
       const coords = data.features.flatMap(f => f.geometry.coordinates.flat(2));
       const lats = coords.filter((_, i) => i % 2 === 1);
       const lngs = coords.filter((_, i) => i % 2 === 0);
@@ -168,7 +180,7 @@ map.on('load', () => {
       map.fitBounds([sw, ne], { padding: 40 });
     });
 
-  // Popup on click
+  // Popup
   map.on('click', 'city-layer', (e) => {
     const cityName = e.features[0].properties.cityname || 'N/A';
     new mapboxgl.Popup()
@@ -177,11 +189,9 @@ map.on('load', () => {
       .addTo(map);
   });
 
-  // Cursor pointer
   map.on('mouseenter', 'city-layer', () => { map.getCanvas().style.cursor = 'pointer'; });
   map.on('mouseleave', 'city-layer', () => { map.getCanvas().style.cursor = ''; });
 
-  // Hover effect
   map.on('mousemove', 'city-layer', (e) => {
     if (e.features.length > 0) {
       const cityName = e.features[0].properties.cityname;
@@ -201,7 +211,7 @@ map.on('load', () => {
     hoverActive = false;
   });
 
-  // Animate hover fill + pulsing outline + pulsing fill color
+  // Hover animation
   function animate() {
     currentOpacity += (targetOpacity - currentOpacity) * 0.1;
     map.setPaintProperty('city-layer-hover-fill', 'fill-opacity', currentOpacity);
@@ -210,7 +220,6 @@ map.on('load', () => {
       pulseTime += 0.05;
       const glowOpacity = 0.15 + Math.sin(pulseTime) * 0.05;
       map.setPaintProperty('city-layer-hover-outline-glow', 'line-opacity', glowOpacity);
-
       const lightness = 90 + Math.sin(pulseTime) * 10;
       map.setPaintProperty('city-layer-hover-fill', 'fill-color', `hsl(200, 100%, ${lightness}%)`);
     } else {

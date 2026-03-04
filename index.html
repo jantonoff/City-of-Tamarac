@@ -87,7 +87,7 @@ map.on('load', () => {
   // 🔹 Use the raw GitHub URL for GeoJSON
   map.addSource('city-boundary', {
     type: 'geojson',
-    data: 'RAW_GITHUB_URL_TO_YOUR_GEOJSON'
+    data: 'https://github.com/jantonoff/City-of-Tamarac/blob/main/city_boundary.geojson'
   });
 
   map.addLayer({
@@ -189,4 +189,5 @@ map.on('load', () => {
 </script>
 
 </body>
+
 </html>

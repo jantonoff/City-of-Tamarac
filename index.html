@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>City Boundary Map</title>
+
+  <link href="https://api.mapbox.com/mapbox-gl-js/v3.0.0/mapbox-gl.css" rel="stylesheet" />
+
+  <style>
+    body { margin: 0; padding: 0; font-family: Arial, sans-serif; }
+    
+    /* Header styling */
+    #header {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 60px;
+      background-color: #007ea8;
+      border-bottom: 1px solid #005f7a;
+      display: flex;
+      align-items: center;
+      padding: 0 20px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+      z-index: 10;
+    }
+    #header img {
+      height: 40px;
+      margin-right: 15px;
+    }
+    #header h1 {
+      font-size: 20px;
+      margin: 0;
+      color: #ffffff;
+    }
+
+    /* Map container */
+    #map {
+      position: absolute;
+      top: 60px;
+      bottom: 0;
+      width: 100%;
+    }
+
+    /* Styled popup */
+    .mapboxgl-popup-content {
+      font-size: 14px;
+      padding: 10px;
+      border-radius: 6px;
+      background-color: #ffffff;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+    }
+    .mapboxgl-popup-content strong {
+      color: #e63946;
+      font-size: 15px;
+    }
+  </style>
+</head>
+<body>
+
+<div id="header">
+  <img src="https://www.tamarac.gov/ImageRepository/Document?documentID=7127" alt="Tamarac Logo">
+  <h1>Tamarac City Boundaries</h1>
+</div>
+
+<div id="map"></div>
+
+<script src="https://api.mapbox.com/mapbox-gl-js/v3.0.0/mapbox-gl.js"></script>
+
+<script>
+mapboxgl.accessToken = 'pk.eyJ1IjoiamFudG9ub2ZmIiwiYSI6ImNtbWNnMXl4eTA1cmIyc29henA1cmNuczcifQ.kNhv2ZwsggeHpSwQ7n5-Tg';
+
+const map = new mapboxgl.Map({
+  container: 'map',
+  style: 'mapbox://styles/mapbox/streets-v12',
+  center: [-80.1918, 25.7617],
+  zoom: 10
+});
+
+let targetOpacity = 0;
+let currentOpacity = 0;
+let hoverActive = false;
+let pulseTime = 0;
+
+map.on('load', () => {
+
+  // 🔹 Use the raw GitHub URL for GeoJSON
+  map.addSource('city-boundary', {
+    type: 'geojson',
+    data: 'RAW_GITHUB_URL_TO_YOUR_GEOJSON'
+  });
+
+  map.addLayer({
+    id: 'city-layer',
+    type: 'fill',
+    source: 'city-boundary',
+    paint: { 'fill-color': '#e63946', 'fill-opacity': 0.5 }
+  });
+
+  map.addLayer({
+    id: 'city-layer-hover-fill',
+    type: 'fill',
+    source: 'city-boundary',
+    paint: { 'fill-color': '#f1faee', 'fill-opacity': 0 },
+    filter: ['==', 'cityname', '']
+  });
+
+  map.addLayer({
+    id: 'city-layer-hover-outline-glow',
+    type: 'line',
+    source: 'city-boundary',
+    paint: { 'line-color': '#f1faee', 'line-width': 10, 'line-opacity': 0.15 },
+    filter: ['==', 'cityname', '']
+  });
+
+  map.addLayer({
+    id: 'city-layer-hover-outline',
+    type: 'line',
+    source: 'city-boundary',
+    paint: { 'line-color': '#f1faee', 'line-width': 3, 'line-opacity': 1 },
+    filter: ['==', 'cityname', '']
+  });
+
+  // Fit map to bounds
+  fetch('RAW_GITHUB_URL_TO_YOUR_GEOJSON')
+    .then(r => r.json())
+    .then(data => {
+      const coords = data.features.flatMap(f => f.geometry.coordinates.flat(2));
+      const lats = coords.filter((_, i) => i % 2 === 1);
+      const lngs = coords.filter((_, i) => i % 2 === 0);
+      const sw = [Math.min(...lngs), Math.min(...lats)];
+      const ne = [Math.max(...lngs), Math.max(...lats)];
+      map.fitBounds([sw, ne], { padding: 40 });
+    });
+
+  // Popup
+  map.on('click', 'city-layer', (e) => {
+    const cityName = e.features[0].properties.cityname || 'N/A';
+    new mapboxgl.Popup().setLngLat(e.lngLat).setHTML(`<strong>City Name:</strong> ${cityName}`).addTo(map);
+  });
+
+  // Cursor
+  map.on('mouseenter', 'city-layer', () => { map.getCanvas().style.cursor = 'pointer'; });
+  map.on('mouseleave', 'city-layer', () => { map.getCanvas().style.cursor = ''; });
+
+  // Hover effect
+  map.on('mousemove', 'city-layer', (e) => {
+    if (e.features.length > 0) {
+      const cityName = e.features[0].properties.cityname;
+      map.setFilter('city-layer-hover-fill', ['==', 'cityname', cityName]);
+      map.setFilter('city-layer-hover-outline', ['==', 'cityname', cityName]);
+      map.setFilter('city-layer-hover-outline-glow', ['==', 'cityname', cityName]);
+      targetOpacity = 0.3;
+      hoverActive = true;
+    }
+  });
+
+  map.on('mouseleave', 'city-layer', () => {
+    map.setFilter('city-layer-hover-fill', ['==', 'cityname', '']);
+    map.setFilter('city-layer-hover-outline', ['==', 'cityname', '']);
+    map.setFilter('city-layer-hover-outline-glow', ['==', 'cityname', '']);
+    targetOpacity = 0;
+    hoverActive = false;
+  });
+
+  // Animate hover fill + pulsing outline + pulsing fill color
+  function animate() {
+    currentOpacity += (targetOpacity - currentOpacity) * 0.1;
+    map.setPaintProperty('city-layer-hover-fill', 'fill-opacity', currentOpacity);
+
+    if (hoverActive) {
+      pulseTime += 0.05;
+      const glowOpacity = 0.15 + Math.sin(pulseTime) * 0.05;
+      map.setPaintProperty('city-layer-hover-outline-glow', 'line-opacity', glowOpacity);
+
+      const lightness = 90 + Math.sin(pulseTime) * 10;
+      map.setPaintProperty('city-layer-hover-fill', 'fill-color', `hsl(200, 100%, ${lightness}%)`);
+    } else {
+      map.setPaintProperty('city-layer-hover-outline-glow', 'line-opacity', 0.15);
+      map.setPaintProperty('city-layer-hover-fill', 'fill-color', '#f1faee');
+      pulseTime = 0;
+    }
+
+    requestAnimationFrame(animate);
+  }
+  animate();
+
+});
+</script>
+
+</body>
+</html>

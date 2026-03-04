@@ -2,31 +2,26 @@
 <html>
 <head>
   <meta charset="utf-8">
-  <title>City Boundary 3D Map - Tilted & Persistent</title>
+  <title>City Boundary 3D Map - Fixed</title>
 
   <link href="https://api.mapbox.com/mapbox-gl-js/v3.0.0/mapbox-gl.css" rel="stylesheet" />
   <style>
-    body { margin: 0; padding: 0; font-family: Arial, sans-serif; }
+    body { margin:0; padding:0; font-family: Arial, sans-serif; }
     #header {
-      position: fixed; top: 0; left: 0; width: 100%; height: 60px;
-      background-color: #007ea8; border-bottom: 1px solid #005f7a;
-      display: flex; align-items: center; padding: 0 20px;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.15); z-index: 10;
+      position: fixed; top:0; left:0; width:100%; height:60px;
+      background-color:#007ea8; display:flex; align-items:center;
+      padding:0 20px; box-shadow:0 2px 6px rgba(0,0,0,0.15); z-index:10;
     }
-    #header img { height: 40px; margin-right: 15px; }
-    #header h1 { font-size: 20px; margin: 0; color: #fff; }
-    #map { position: absolute; top: 60px; bottom: 0; width: 100%; }
+    #header img { height:40px; margin-right:15px; }
+    #header h1 { color:#fff; font-size:20px; margin:0; }
+    #map { position:absolute; top:60px; bottom:0; width:100%; }
     #basemap-controls {
-      position: absolute; top: 70px; right: 10px; z-index: 15;
-      background: rgba(255,255,255,0.9); padding: 5px 10px; border-radius: 4px;
-      font-family: Arial, sans-serif;
+      position:absolute; top:70px; right:10px; z-index:15;
+      background: rgba(255,255,255,0.9); padding:5px 10px; border-radius:4px;
     }
-    #basemap-controls select { font-size: 14px; }
-    .mapboxgl-popup-content {
-      font-size: 14px; padding: 10px; border-radius: 6px;
-      background-color: #fff; box-shadow: 0 2px 8px rgba(0,0,0,0.3);
-    }
-    .mapboxgl-popup-content strong { color: #e63946; font-size: 15px; }
+    #basemap-controls select { font-size:14px; }
+    .mapboxgl-popup-content { font-size:14px; padding:10px; border-radius:6px; background:#fff; box-shadow:0 2px 8px rgba(0,0,0,0.3);}
+    .mapboxgl-popup-content strong { color:#e63946; font-size:15px; }
   </style>
 </head>
 <body>
@@ -53,30 +48,28 @@
 mapboxgl.accessToken = 'pk.eyJ1IjoiamFudG9mZiIsImEiOiJjbW1jOHV6djBtMHN6MnJwd2g3djloeGF2NCJ9.5_JYLcmgG0IZ0tn__dR93A';
 
 const geojsonURL = 'https://raw.githubusercontent.com/jantonoff/City-of-Tamarac/main/city_boundary.geojson';
+let targetOpacity=0, currentOpacity=0, hoverActive=false, pulseTime=0;
 
 const map = new mapboxgl.Map({
-  container: 'map',
-  style: 'mapbox://styles/mapbox/streets-v12',
-  pitch: 45,
-  bearing: -17.6,
-  antialias: true
+  container:'map',
+  style:'mapbox://styles/mapbox/streets-v12',
+  pitch:45,
+  bearing:-17.6,
+  antialias:true
 });
 
-// Zoom + rotation controls
+// Controls
 map.addControl(new mapboxgl.NavigationControl(), 'top-left');
-// Geolocate control
 map.addControl(new mapboxgl.GeolocateControl({positionOptions:{enableHighAccuracy:true}, trackUserLocation:true, showUserHeading:true}), 'top-left');
 
-let targetOpacity = 0, currentOpacity = 0, hoverActive = false, pulseTime = 0;
-
-// Function to add city + fake 3D
+// Function to add layers
 function addCityAnd3DEffects() {
   fetch(geojsonURL).then(r=>r.json()).then(data=>{
-    // City boundary source
-    if(!map.getSource('city-boundary')) map.addSource('city-boundary',{type:'geojson',data:geojsonURL});
+    // Add city boundary source
+    if(!map.getSource('city-boundary')) map.addSource('city-boundary',{type:'geojson', data:geojsonURL});
 
-    // City polygon layer
-    if(!map.getLayer('city-layer')) map.addLayer({id:'city-layer',type:'fill',source:'city-boundary',paint:{'fill-color':'#e63946','fill-opacity':0.5}});
+    // City polygon
+    if(!map.getLayer('city-layer')) map.addLayer({id:'city-layer', type:'fill', source:'city-boundary', paint:{'fill-color':'#e63946','fill-opacity':0.5}});
 
     // Hover layers
     const hoverLayers = [
@@ -92,7 +85,7 @@ function addCityAnd3DEffects() {
     });
 
     // Fake 3D buildings
-    const buildings={type:'FeatureCollection', features:data.features.map(f=>({type:'Feature',geometry:f.geometry,properties:{height:Math.random()*50+10}}))};
+    const buildings={type:'FeatureCollection', features:data.features.map(f=>({type:'Feature',geometry:f.geometry, properties:{height:Math.random()*50+10}}))};
     if(!map.getSource('fake-buildings')) map.addSource('fake-buildings',{type:'geojson',data:buildings});
     if(!map.getLayer('fake-buildings-layer')) map.addLayer({id:'fake-buildings-layer', type:'fill-extrusion', source:'fake-buildings', paint:{'fill-extrusion-color':'#888','fill-extrusion-height':['get','height'],'fill-extrusion-opacity':0.6}});
 
@@ -107,13 +100,17 @@ function addCityAnd3DEffects() {
     if(!map.getSource('fake-trees')) map.addSource('fake-trees',{type:'geojson',data:treePoints});
     if(!map.getLayer('fake-trees-layer')) map.addLayer({id:'fake-trees-layer', type:'fill-extrusion', source:'fake-trees', paint:{'fill-extrusion-color':'#2d6a4f','fill-extrusion-height':['get','height'],'fill-extrusion-opacity':0.8}});
 
-    // Fit to city boundary with tilt (pitch 60)
-    const coords=data.features.flatMap(f=>f.geometry.coordinates.flat(2));
-    const lats=coords.filter((_,i)=>i%2===1);
-    const lngs=coords.filter((_,i)=>i%2===0);
-    const sw=[Math.min(...lngs), Math.min(...lats)];
-    const ne=[Math.max(...lngs), Math.max(...lats)];
-    map.fitBounds([sw,ne],{padding:40, pitch:60});
+    // Fit to city boundary once on initial load
+    if(!map._initialBoundsFitted){
+      const coords=data.features.flatMap(f=>f.geometry.coordinates.flat(2));
+      const lats=coords.filter((_,i)=>i%2===1);
+      const lngs=coords.filter((_,i)=>i%2===0);
+      const sw=[Math.min(...lngs), Math.min(...lats)];
+      const ne=[Math.max(...lngs), Math.max(...lats)];
+      map.fitBounds([sw,ne],{padding:40});
+      map.easeTo({pitch:60, bearing:-17.6});
+      map._initialBoundsFitted=true;
+    }
   });
 }
 
@@ -123,16 +120,17 @@ map.on('load', addCityAnd3DEffects);
 // Basemap switcher
 document.getElementById('basemap').addEventListener('change',function(){
   map.setStyle(this.value);
-  map.once('styledata', addCityAnd3DEffects);
+  map.once('style.load', addCityAnd3DEffects);
 });
 
-// Popup + hover
+// Popups & hover
 map.on('click','city-layer', e=>{
   const cityName=e.features[0].properties.cityname || 'N/A';
   new mapboxgl.Popup().setLngLat(e.lngLat).setHTML(`<strong>City Name:</strong> ${cityName}`).addTo(map);
 });
 map.on('mouseenter','city-layer',()=>map.getCanvas().style.cursor='pointer');
 map.on('mouseleave','city-layer',()=>map.getCanvas().style.cursor='');
+
 map.on('mousemove','city-layer', e=>{
   if(e.features.length>0){
     const cityName=e.features[0].properties.cityname;

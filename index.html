@@ -107,25 +107,25 @@ body { margin:0; padding:0; font-family:Arial,sans-serif; }
 <div id="basemap-controls">
   <div class="basemap-card active"
        data-style="mapbox://styles/mapbox/streets-v12"
-       style="background:url('https://api.mapbox.com/styles/v1/mapbox/streets-v12/static/-80.25,26.22,11/300x150?access_token=pk.eyJ1IjoiamFudG9ub2ZmIiwiYSI6ImNtbWM4dTJ2bTAzczUycnB3aDd2OXhhdjQifQ.5_JYLcmgG0IZ0tn__dR93A') center/cover;">
+       style="background:url('https://api.mapbox.com/styles/v1/mapbox/streets-v12/static/-80.25,26.22,11/300x150?access_token=YOUR_TOKEN') center/cover;">
     <div class="basemap-label">Streets</div>
   </div>
 
   <div class="basemap-card"
        data-style="mapbox://styles/mapbox/satellite-streets-v12"
-       style="background:url('https://api.mapbox.com/styles/v1/mapbox/satellite-streets-v12/static/-80.25,26.22,11/300x150?access_token=pk.eyJ1IjoiamFudG9ub2ZmIiwiYSI6ImNtbWM4dTJ2bTAzczUycnB3aDd2OXhhdjQifQ.5_JYLcmgG0IZ0tn__dR93A') center/cover;">
+       style="background:url('https://api.mapbox.com/styles/v1/mapbox/satellite-streets-v12/static/-80.25,26.22,11/300x150?access_token=YOUR_TOKEN') center/cover;">
     <div class="basemap-label">Satellite</div>
   </div>
 
   <div class="basemap-card"
        data-style="mapbox://styles/mapbox/light-v11"
-       style="background:url('https://api.mapbox.com/styles/v1/mapbox/light-v11/static/-80.25,26.22,11/300x150?access_token=pk.eyJ1IjoiamFudG9ub2ZmIiwiYSI6ImNtbWM4dTJ2bTAzczUycnB3aDd2OXhhdjQifQ.5_JYLcmgG0IZ0tn__dR93A') center/cover;">
+       style="background:url('https://api.mapbox.com/styles/v1/mapbox/light-v11/static/-80.25,26.22,11/300x150?access_token=YOUR_TOKEN') center/cover;">
     <div class="basemap-label">Light</div>
   </div>
 
   <div class="basemap-card"
        data-style="mapbox://styles/mapbox/dark-v11"
-       style="background:url('https://api.mapbox.com/styles/v1/mapbox/dark-v11/static/-80.25,26.22,11/300x150?access_token=pk.eyJ1IjoiamFudG9ub2ZmIiwiYSI6ImNtbWM4dTJ2bTAzczUycnB3aDd2OXhhdjQifQ.5_JYLcmgG0IZ0tn__dR93A') center/cover;">
+       style="background:url('https://api.mapbox.com/styles/v1/mapbox/dark-v11/static/-80.25,26.22,11/300x150?access_token=YOUR_TOKEN') center/cover;">
     <div class="basemap-label">Dark</div>
   </div>
 </div>
@@ -134,7 +134,7 @@ body { margin:0; padding:0; font-family:Arial,sans-serif; }
 <script src="https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-geocoder/v5.0.0/mapbox-gl-geocoder.min.js"></script>
 
 <script>
-mapboxgl.accessToken = 'pk.eyJ1IjoiamFudG9ub2ZmIiwiYSI6ImNtbWM4dTJ2bTAzczUycnB3aDd2OXhhdjQifQ.5_JYLcmgG0IZ0tn__dR93A';
+mapboxgl.accessToken = 'YOUR_MAPBOX_PUBLIC_TOKEN';
 
 const geojsonURL = 'https://raw.githubusercontent.com/jantonoff/City-of-Tamarac/main/city_boundary.geojson';
 
@@ -160,24 +160,33 @@ map.addControl(new MapboxGeocoder({
 
 function addCityLayer() {
 
+  if (map.getSource('city')) return;
+
   map.addSource('city',{ type:'geojson', data:geojsonURL });
 
   map.addLayer({
     id:'city-fill',
     type:'fill',
     source:'city',
-    paint:{ 'fill-color':'#e63946', 'fill-opacity':0.5 }
+    paint:{ 'fill-color':'#e63946','fill-opacity':0.5 }
   });
 
   map.addLayer({
     id:'city-outline',
     type:'line',
     source:'city',
-    paint:{ 'line-color':'#ffffff', 'line-width':3 }
+    paint:{ 'line-color':'#ffffff','line-width':3 }
   });
 
   const layers = map.getStyle().layers;
-  const labelLayerId = layers.find(l=>l.type==='symbol')?.id;
+  let labelLayerId = null;
+
+  for (const layer of layers) {
+    if (layer.type === 'symbol' && layer.layout && layer.layout['text-field']) {
+      labelLayerId = layer.id;
+      break;
+    }
+  }
 
   map.addLayer({
     id:'3d-buildings',
@@ -192,28 +201,43 @@ function addCityLayer() {
       'fill-extrusion-base':['get','min_height'],
       'fill-extrusion-opacity':0.6
     }
-  }, labelLayerId);
+  }, labelLayerId || undefined);
 }
 
 map.on('load', async ()=>{
 
   addCityLayer();
 
-  const response = await fetch(geojsonURL);
-  const data = await response.json();
+  try {
+    const response = await fetch(geojsonURL);
+    const data = await response.json();
 
-  const coords = data.features.flatMap(f=>f.geometry.coordinates.flat(2));
-  const lats = coords.filter((_,i)=>i%2===1);
-  const lngs = coords.filter((_,i)=>i%2===0);
+    const bounds = new mapboxgl.LngLatBounds();
 
-  const sw=[Math.min(...lngs),Math.min(...lats)];
-  const ne=[Math.max(...lngs),Math.max(...lats)];
+    data.features.forEach(feature=>{
+      const geom = feature.geometry;
 
-  map.fitBounds([sw,ne],{padding:60});
+      if (geom.type === "Polygon") {
+        geom.coordinates[0].forEach(coord=>bounds.extend(coord));
+      }
 
-  setTimeout(()=>{
-    map.easeTo({ pitch:65, bearing:-25, duration:3000 });
-  },1000);
+      if (geom.type === "MultiPolygon") {
+        geom.coordinates.forEach(polygon=>{
+          polygon[0].forEach(coord=>bounds.extend(coord));
+        });
+      }
+    });
+
+    map.fitBounds(bounds,{ padding:60 });
+
+    setTimeout(()=>{
+      map.easeTo({ pitch:65, bearing:-25, duration:3000 });
+    },1000);
+
+  } catch(error){
+    console.error("GeoJSON failed to load:", error);
+  }
+
 });
 
 document.querySelectorAll('.basemap-card').forEach(card=>{
@@ -229,5 +253,3 @@ document.querySelectorAll('.basemap-card').forEach(card=>{
 
 </body>
 </html>
-
-

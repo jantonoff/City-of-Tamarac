@@ -90,7 +90,6 @@ const hoverPopup = new mapboxgl.Popup({closeButton:false, closeOnClick:false, cl
 // ------------------
 function addCityLayer() {
     if(map.getSource('city')) return;
-
     map.addSource('city',{ type:'geojson', data: geojsonURL });
 
     map.addLayer({
@@ -113,43 +112,25 @@ function addCityLayer() {
         }
     });
 
-    const layers = map.getStyle().layers;
-    const labelLayerId = layers.find(l=>l.type==='symbol' && l.layout?.['text-field'])?.id;
-    map.addLayer({
-        id:'3d-buildings',
-        source:'composite',
-        'source-layer':'building',
-        filter:['==','extrude','true'],
-        type:'fill-extrusion',
-        minzoom:15,
-        paint:{ 'fill-extrusion-color':'#aaa', 'fill-extrusion-height':['get','height'], 'fill-extrusion-base':['get','min_height'], 'fill-extrusion-opacity':0.6 }
-    }, labelLayerId || undefined);
-
     let hoveredId = null;
 
-    // Hover glow
     map.on('mousemove','city-fill', e=>{
-        if(e.features.length > 0){
+        if(e.features.length>0){
             if(hoveredId !== null){
                 map.setFeatureState({source:'city', id:hoveredId}, {hover:false});
             }
             hoveredId = e.features[0].id;
             map.setFeatureState({source:'city', id:hoveredId}, {hover:true});
-
-            hoverPopup.setLngLat(e.lngLat)
-                      .setHTML('<strong>Tamarac City</strong>')
-                      .addTo(map);
+            hoverPopup.setLngLat(e.lngLat).setHTML('<strong>Tamarac City</strong>').addTo(map);
         }
     });
+
     map.on('mouseleave','city-fill', ()=>{
-        if(hoveredId !== null){
-            map.setFeatureState({source:'city', id:hoveredId}, {hover:false});
-        }
+        if(hoveredId !== null) map.setFeatureState({source:'city', id:hoveredId}, {hover:false});
         hoveredId = null;
         hoverPopup.remove();
     });
 
-    // Click popup
     map.on('click','city-fill', e=>{
         popup.setLngLat(e.lngLat)
              .setHTML('<div class="popup-content"><h3>Tamarac City Boundary</h3><p>This is the Tamarac city boundary polygon.</p></div>')
@@ -170,28 +151,12 @@ function addPOIs() {
         clusterRadius:50
     });
 
-    map.addLayer({
-        id:'clusters',
-        type:'circle',
-        source:'pois',
-        filter:['has','point_count'],
-        paint:{ 'circle-color':'#1d4ed8','circle-radius':['step',['get','point_count'],15,5,20,10,25],'circle-opacity':0.7 }
-    });
-    map.addLayer({
-        id:'cluster-count',
-        type:'symbol',
-        source:'pois',
-        filter:['has','point_count'],
-        layout:{'text-field':'{point_count_abbreviated}','text-size':12,'text-font':['Arial Unicode MS Bold']},
-        paint:{'text-color':'#fff'}
-    });
-    map.addLayer({
-        id:'unclustered-point',
-        type:'circle',
-        source:'pois',
-        filter:['!','has','point_count'],
-        paint:{'circle-color':'#fbbf24','circle-radius':8,'circle-stroke-width':1,'circle-stroke-color':'#fff','circle-opacity':0.9}
-    });
+    map.addLayer({id:'clusters', type:'circle', source:'pois', filter:['has','point_count'],
+        paint:{ 'circle-color':'#1d4ed8','circle-radius':['step',['get','point_count'],15,5,20,10,25],'circle-opacity':0.7 }});
+    map.addLayer({id:'cluster-count', type:'symbol', source:'pois', filter:['has','point_count'],
+        layout:{'text-field':'{point_count_abbreviated}','text-size':12,'text-font':['Arial Unicode MS Bold']}, paint:{'text-color':'#fff'}});
+    map.addLayer({id:'unclustered-point', type:'circle', source:'pois', filter:['!','has','point_count'],
+        paint:{'circle-color':'#fbbf24','circle-radius':8,'circle-stroke-width':1,'circle-stroke-color':'#fff','circle-opacity':0.9}});
 
     map.on('mouseenter','unclustered-point', e=>{
         map.getCanvas().style.cursor='pointer';
@@ -229,6 +194,7 @@ function addPOIs() {
 map.on('load', async ()=>{
     addCityLayer();
     addPOIs();
+
     try{
         const response = await fetch(geojsonURL);
         const data = await response.json();
@@ -241,12 +207,13 @@ map.on('load', async ()=>{
         map.fitBounds(bounds,{ padding:60, pitch:10, bearing:0, duration:1500 });
         setTimeout(()=>{ map.easeTo({ pitch:30, bearing:0, duration:2000 }); },1600);
     }catch(err){ console.error(err);}
+
     const activeCard = document.querySelector('.basemap-card-small.active');
     if(activeCard) document.getElementById('basemap-button').style.backgroundImage = activeCard.style.backgroundImage;
 });
 
 // ------------------
-// Basemap switcher (unchanged)
+// Basemap switcher
 // ------------------
 const basemapButton = document.getElementById('basemap-button');
 const basemapDropdown = document.getElementById('basemap-dropdown');
@@ -283,4 +250,9 @@ document.addEventListener('click', e=>{
 
 window.addEventListener('resize', ()=>{
     if(basemapDropdown.style.display==='flex'){
-        basemapDropdown
+        basemapDropdown.style.maxWidth = `${window.innerWidth - 30}px`;
+    }
+});
+</script>
+</body>
+</html>

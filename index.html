@@ -214,20 +214,17 @@ style:'mapbox://styles/mapbox/streets-v12',
 center:[-80.25,26.22],
 zoom:11,
 pitch:30,
-bearing:0,
+bearing:-10,
 antialias:true
 });
 
 /* controls */
-
 const nav=new mapboxgl.NavigationControl();
-
 const geocoder=new MapboxGeocoder({
 accessToken:mapboxgl.accessToken,
 mapboxgl:mapboxgl,
 placeholder:"Search Tamarac..."
 });
-
 const controlsContainer=document.createElement('div');
 controlsContainer.className='controls-container';
 controlsContainer.appendChild(nav.onAdd(map));
@@ -237,22 +234,15 @@ map.getContainer().appendChild(controlsContainer);
 let cityData=null;
 
 /* LOAD CITY */
-
 async function loadCity(){
-
 const r=await fetch(geojsonURL);
 cityData=await r.json();
-
 cityData.features.forEach((f,i)=>f.id=i);
-
 }
 
 /* CITY LAYER */
-
 function addCityLayer(){
-
 map.addSource('city',{type:'geojson',data:cityData});
-
 map.addLayer({
 id:'city-fill',
 type:'fill',
@@ -262,7 +252,6 @@ paint:{
 'fill-opacity':0.4
 }
 });
-
 map.addLayer({
 id:'city-outline',
 type:'line',
@@ -272,13 +261,10 @@ paint:{
 'line-width':3
 }
 });
-
 }
 
 /* POIs */
-
 function addPOIs(){
-
 map.addSource('pois',{
 type:'geojson',
 data:poiData,
@@ -286,7 +272,6 @@ cluster:true,
 clusterMaxZoom:14,
 clusterRadius:50
 });
-
 map.addLayer({
 id:'clusters',
 type:'circle',
@@ -297,7 +282,6 @@ paint:{
 'circle-radius':['step',['get','point_count'],15,5,20,10,25]
 }
 });
-
 map.addLayer({
 id:'cluster-count',
 type:'symbol',
@@ -308,7 +292,6 @@ layout:{
 'text-size':12
 }
 });
-
 map.addLayer({
 id:'unclustered',
 type:'circle',
@@ -321,55 +304,49 @@ paint:{
 'circle-stroke-color':'white'
 }
 });
-
 }
 
 /* POPUPS */
-
 function addInteractions(){
-
 const popup=new mapboxgl.Popup();
-
 map.on('click','unclustered',e=>{
-
 const p=e.features[0].properties;
-
-popup
-.setLngLat(e.features[0].geometry.coordinates)
+popup.setLngLat(e.features[0].geometry.coordinates)
 .setHTML(`<b>${p.name}</b><br>${p.type}`)
 .addTo(map);
-
 });
 
+// POPUP for city layer
+map.on('click', 'city-fill', e => {
+new mapboxgl.Popup()
+.setLngLat(e.lngLat)
+.setHTML('<b>City of Tamarac</b>')
+.addTo(map);
+});
+
+// cursor change
+map.on('mouseenter','city-fill',()=>{map.getCanvas().style.cursor='pointer';});
+map.on('mouseleave','city-fill',()=>{map.getCanvas().style.cursor='';});
 }
 
 /* TERRAIN + 3D BUILDINGS */
-
 function add3D(){
-
 map.addSource('mapbox-dem',{
 type:'raster-dem',
 url:'mapbox://mapbox.mapbox-terrain-dem-v1',
 tileSize:512,
 maxzoom:14
 });
-
-map.setTerrain({
-source:'mapbox-dem',
-exaggeration:1.2
-});
+map.setTerrain({source:'mapbox-dem',exaggeration:1.2});
 
 const layers=map.getStyle().layers;
-
 let labelLayerId;
-
 for(const layer of layers){
 if(layer.type==='symbol' && layer.layout['text-field']){
 labelLayerId=layer.id;
 break;
 }
 }
-
 map.addLayer({
 id:'3d-buildings',
 source:'composite',
@@ -384,80 +361,56 @@ paint:{
 'fill-extrusion-opacity':0.6
 }
 },labelLayerId);
+}
 
+/* ZOOM TO CITY */
+function zoomToCity() {
+if(!cityData) return;
+const bounds = new mapboxgl.LngLatBounds();
+cityData.features.forEach(f => {
+f.geometry.coordinates[0].forEach(c => bounds.extend(c));
+});
+map.fitBounds(bounds,{padding:60,maxZoom:16});
 }
 
 /* INITIALIZE */
-
 function initializeLayers(){
-
 addCityLayer();
 addPOIs();
 addInteractions();
 add3D();
-
+zoomToCity();
 }
 
 /* LOAD */
-
 map.on('load',async()=>{
-
 await loadCity();
-
 initializeLayers();
 
-map.easeTo({
-pitch:60,
-bearing:0,
-duration:2000
-});
+map.easeTo({pitch:60,bearing: 0,duration:2000});
 
 const active=document.querySelector('.basemap-card.active');
 document.getElementById('basemap-button').style.backgroundImage=active.style.backgroundImage;
-
 });
 
 /* BASEMAP SWITCHER */
-
 document.querySelectorAll('.basemap-card').forEach(card=>{
-
 card.onclick=()=>{
-
 const style=card.dataset.style;
-
 map.setStyle(style);
-
-map.once('style.load',()=>{
-
-initializeLayers();
-
-});
-
+map.once('style.load',()=>{initializeLayers();});
 document.querySelectorAll('.basemap-card').forEach(c=>c.classList.remove('active'));
-
 card.classList.add('active');
-
 document.getElementById('basemap-button').style.backgroundImage=card.style.backgroundImage;
-
 };
-
 });
 
 const button=document.getElementById('basemap-button');
 const dropdown=document.getElementById('basemap-dropdown');
-
-button.onclick=e=>{
-e.stopPropagation();
-dropdown.style.display=dropdown.style.display==='flex'?'none':'flex';
-};
-
-document.onclick=()=>{
-dropdown.style.display='none';
-};
+button.onclick=e=>{e.stopPropagation();dropdown.style.display=dropdown.style.display==='flex'?'none':'flex';};
+document.onclick=()=>{dropdown.style.display='none';};
 
 </script>
 
 </body>
 </html>
-
-

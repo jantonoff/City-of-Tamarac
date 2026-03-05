@@ -209,23 +209,29 @@ map.on('load', async ()=>{
     const data = await response.json();
 
     // Compute bounds
-    const bounds = new mapboxgl.LngLatBounds();
-    data.features.forEach(feature=>{
-      const geom = feature.geometry;
-      if (geom.type==="Polygon") geom.coordinates[0].forEach(coord=>bounds.extend(coord));
-      if (geom.type==="MultiPolygon") geom.coordinates.forEach(polygon=>polygon[0].forEach(coord=>bounds.extend(coord)));
-    });
+const bounds = new mapboxgl.LngLatBounds();
+data.features.forEach(feature=>{
+  const geom = feature.geometry;
+  if (geom.type==="Polygon") geom.coordinates[0].forEach(coord=>bounds.extend(coord));
+  if (geom.type==="MultiPolygon") geom.coordinates.forEach(polygon=>polygon[0].forEach(coord=>bounds.extend(coord)));
+});
 
-    // Smooth zoom + tilt in one step
-    const center = bounds.getCenter();
-    const zoom = map.getZoomForBounds(bounds);
-    map.easeTo({
-      center: center,
-      zoom: zoom,
-      pitch: 65,
-      bearing: -25,
-      duration: 3000
-    });
+// Step 1: fit bounds with minimal pitch
+map.fitBounds(bounds, {
+  padding: 60,
+  pitch: 10,        // low tilt initially
+  bearing: 0,       // straight north
+  duration: 1500    // smooth
+});
+
+// Step 2: after fitBounds finishes, increase pitch slightly
+setTimeout(()=>{
+  map.easeTo({
+    pitch: 30,      // mild tilt
+    bearing: -25,   // slight rotation
+    duration: 2000
+  });
+}, 1600); // slightly after fitBounds duration
 
   } catch(error){
     console.error("GeoJSON failed to load:", error);
@@ -247,3 +253,4 @@ document.querySelectorAll('.basemap-card').forEach(card=>{
 
 </body>
 </html>
+

@@ -107,22 +107,22 @@ body { margin:0; padding:0; font-family:Arial,sans-serif; }
 
 <div id="basemap-controls">
   <div class="basemap-card active" data-style="mapbox://styles/mapbox/streets-v12"
-       style="background:url('https://api.mapbox.com/styles/v1/mapbox/streets-v12/static/-80.25,26.22,11/300x150?access_token=YOUR_MAPBOX_TOKEN') center/cover;">
+       style="background:url('https://api.mapbox.com/styles/v1/mapbox/streets-v12/static/-80.25,26.22,11/300x150?access_token=pk.eyJ1IjoiamFudG9ub2ZmIiwiYSI6ImNtbWNobmt3aDAycmczMXB1Y2pjZ3FnMHcifQ.b2d4BLzSWRZN1VpcEBuIeQ') center/cover;">
     <div class="basemap-label">Streets</div>
   </div>
 
   <div class="basemap-card" data-style="mapbox://styles/mapbox/satellite-streets-v12"
-       style="background:url('https://api.mapbox.com/styles/v1/mapbox/satellite-streets-v12/static/-80.25,26.22,11/300x150?access_token=YOUR_MAPBOX_TOKEN') center/cover;">
+       style="background:url('https://api.mapbox.com/styles/v1/mapbox/satellite-streets-v12/static/-80.25,26.22,11/300x150?access_token=pk.eyJ1IjoiamFudG9ub2ZmIiwiYSI6ImNtbWNobmt3aDAycmczMXB1Y2pjZ3FnMHcifQ.b2d4BLzSWRZN1VpcEBuIeQ') center/cover;">
     <div class="basemap-label">Satellite</div>
   </div>
 
   <div class="basemap-card" data-style="mapbox://styles/mapbox/light-v11"
-       style="background:url('https://api.mapbox.com/styles/v1/mapbox/light-v11/static/-80.25,26.22,11/300x150?access_token=YOUR_MAPBOX_TOKEN') center/cover;">
+       style="background:url('https://api.mapbox.com/styles/v1/mapbox/light-v11/static/-80.25,26.22,11/300x150?access_token=pk.eyJ1IjoiamFudG9ub2ZmIiwiYSI6ImNtbWNobmt3aDAycmczMXB1Y2pjZ3FnMHcifQ.b2d4BLzSWRZN1VpcEBuIeQ') center/cover;">
     <div class="basemap-label">Light</div>
   </div>
 
   <div class="basemap-card" data-style="mapbox://styles/mapbox/dark-v11"
-       style="background:url('https://api.mapbox.com/styles/v1/mapbox/dark-v11/static/-80.25,26.22,11/300x150?access_token=YOUR_MAPBOX_TOKEN') center/cover;">
+       style="background:url('https://api.mapbox.com/styles/v1/mapbox/dark-v11/static/-80.25,26.22,11/300x150?access_token=pk.eyJ1IjoiamFudG9ub2ZmIiwiYSI6ImNtbWNobmt3aDAycmczMXB1Y2pjZ3FnMHcifQ.b2d4BLzSWRZN1VpcEBuIeQ') center/cover;">
     <div class="basemap-label">Dark</div>
   </div>
 </div>
@@ -131,7 +131,7 @@ body { margin:0; padding:0; font-family:Arial,sans-serif; }
 <script src="https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-geocoder/v5.0.0/mapbox-gl-geocoder.min.js"></script>
 
 <script>
-mapboxgl.accessToken = 'YOUR_MAPBOX_TOKEN';
+mapboxgl.accessToken = 'pk.eyJ1IjoiamFudG9ub2ZmIiwiYSI6ImNtbWNobmt3aDAycmczMXB1Y2pjZ3FnMHcifQ.b2d4BLzSWRZN1VpcEBuIeQ';
 const geojsonURL = 'https://raw.githubusercontent.com/jantonoff/City-of-Tamarac/main/city_boundary.geojson';
 
 const map = new mapboxgl.Map({
@@ -234,3 +234,4 @@ document.querySelectorAll('.basemap-card').forEach(card=>{
 
 </body>
 </html>
+

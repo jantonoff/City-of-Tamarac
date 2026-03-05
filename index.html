@@ -48,7 +48,7 @@ body { margin:0; padding:0; font-family:Arial,sans-serif; }
   border-radius:3px;
 }
 
-/* Tucked top-left controls container */
+/* Top-left controls container */
 .controls-container {
   display:flex;
   flex-direction:row;
@@ -60,14 +60,13 @@ body { margin:0; padding:0; font-family:Arial,sans-serif; }
   z-index:10;
 }
 
-/* Basemap Button Container (bottom right) */
+/* Basemap Button (bottom right) */
 #basemap-button-container {
   position: absolute;
-  bottom:50px; /* above Mapbox credits */
+  bottom:50px;
   right:15px;
   z-index:15;
 }
-
 #basemap-button {
   width:70px;
   height:70px;
@@ -83,7 +82,6 @@ body { margin:0; padding:0; font-family:Arial,sans-serif; }
   align-items:center;
   justify-content:center;
 }
-
 #basemap-button::after {
   content: "▼";
   position:absolute;
@@ -95,12 +93,11 @@ body { margin:0; padding:0; font-family:Arial,sans-serif; }
   text-shadow:0 0 3px rgba(0,0,0,0.8);
   transition: transform 0.25s ease;
 }
-
 #basemap-button.open::after {
   transform: rotate(180deg);
 }
 
-/* Horizontal Responsive Dropdown */
+/* Dropdown */
 #basemap-dropdown {
   display:none;
   position:absolute;
@@ -114,12 +111,10 @@ body { margin:0; padding:0; font-family:Arial,sans-serif; }
   padding:6px;
   border-radius:10px;
   box-shadow:0 5px 15px rgba(0,0,0,0.3);
-
   opacity:0;
   transform:translateY(10px);
   transition: opacity 0.25s ease, transform 0.25s ease;
 }
-
 #basemap-dropdown.show {
   opacity:1;
   transform:translateY(0);
@@ -136,13 +131,16 @@ body { margin:0; padding:0; font-family:Arial,sans-serif; }
   border:2px solid transparent;
   transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
 }
-
 .basemap-card-small:hover {
   transform: scale(1.05);
   border-color:#007ea8;
   box-shadow:0 6px 15px rgba(0,0,0,0.35);
 }
-
+.basemap-card-small.active {
+  border:3px solid #007ea8;
+  box-shadow:0 6px 15px rgba(0,0,0,0.4);
+  transform: scale(1.05);
+}
 .basemap-label-small {
   position:absolute;
   bottom:4px;
@@ -172,7 +170,7 @@ body { margin:0; padding:0; font-family:Arial,sans-serif; }
 <div id="basemap-button-container">
   <div id="basemap-button"></div>
   <div id="basemap-dropdown">
-    <div class="basemap-card-small" data-style="mapbox://styles/mapbox/streets-v12" style="background:url('https://api.mapbox.com/styles/v1/mapbox/streets-v12/static/-80.25,26.22,11/300x150?access_token=pk.eyJ1IjoiamFudG9ubmt3aDAycmczMXB1Y2pjZ3FnMHcifQ.b2d4BLzSWRZN1VpcEBuIeQ') center/cover;"><div class="basemap-label-small">Streets</div></div>
+    <div class="basemap-card-small active" data-style="mapbox://styles/mapbox/streets-v12" style="background:url('https://api.mapbox.com/styles/v1/mapbox/streets-v12/static/-80.25,26.22,11/300x150?access_token=pk.eyJ1IjoiamFudG9ubmt3aDAycmczMXB1Y2pjZ3FnMHcifQ.b2d4BLzSWRZN1VpcEBuIeQ') center/cover;"><div class="basemap-label-small">Streets</div></div>
     <div class="basemap-card-small" data-style="mapbox://styles/mapbox/satellite-streets-v12" style="background:url('https://api.mapbox.com/styles/v1/mapbox/satellite-streets-v12/static/-80.25,26.22,11/300x150?access_token=pk.eyJ1IjoiamFudG9ubmt3aDAycmczMXB1Y2pjZ3FnMHcifQ.b2d4BLzSWRZN1VpcEBuIeQ') center/cover;"><div class="basemap-label-small">Satellite</div></div>
     <div class="basemap-card-small" data-style="mapbox://styles/mapbox/light-v11" style="background:url('https://api.mapbox.com/styles/v1/mapbox/light-v11/static/-80.25,26.22,11/300x150?access_token=pk.eyJ1IjoiamFudG9ubmt3aDAycmczMXB1Y2pjZ3FnMHcifQ.b2d4BLzSWRZN1VpcEBuIeQ') center/cover;"><div class="basemap-label-small">Light</div></div>
     <div class="basemap-card-small" data-style="mapbox://styles/mapbox/dark-v11" style="background:url('https://api.mapbox.com/styles/v1/mapbox/dark-v11/static/-80.25,26.22,11/300x150?access_token=pk.eyJ1IjoiamFudG9ubmt3aDAycmczMXB1Y2pjZ3FnMHcifQ.b2d4BLzSWRZN1VpcEBuIeQ') center/cover;"><div class="basemap-label-small">Dark</div></div>
@@ -227,6 +225,9 @@ map.on('load', async ()=>{
     map.fitBounds(bounds,{ padding:60, pitch:10, bearing:0, duration:1500 });
     setTimeout(()=>{ map.easeTo({ pitch:30, bearing:0, duration:2000 }); },1600);
   }catch(err){ console.error("GeoJSON failed to load:",err);}
+  // Initialize basemap button preview after map load
+  const activeCard = document.querySelector('.basemap-card-small.active');
+  if(activeCard) document.getElementById('basemap-button').style.backgroundImage = activeCard.style.backgroundImage;
 });
 
 // ------------------
@@ -234,7 +235,6 @@ map.on('load', async ()=>{
 // ------------------
 const basemapButton = document.getElementById('basemap-button');
 const basemapDropdown = document.getElementById('basemap-dropdown');
-basemapButton.style.backgroundImage = document.querySelector('.basemap-card-small').style.backgroundImage;
 
 // Toggle dropdown
 basemapButton.addEventListener('click', e=>{
@@ -255,12 +255,17 @@ basemapButton.addEventListener('click', e=>{
 document.querySelectorAll('.basemap-card-small').forEach(card=>{
   card.addEventListener('click', e=>{
     e.stopPropagation();
+    // Remove active from all cards
+    document.querySelectorAll('.basemap-card-small').forEach(c=>c.classList.remove('active'));
+    card.classList.add('active');
+    // Set map style
     map.setStyle(card.dataset.style);
+    map.once('style.load', addCityLayer);
+    // Update button preview
     basemapButton.style.backgroundImage = card.style.backgroundImage;
     basemapDropdown.classList.remove('show');
     basemapButton.classList.remove('open');
     setTimeout(()=>{ basemapDropdown.style.display='none'; }, 250);
-    map.once('style.load', addCityLayer);
   });
 });
 
@@ -282,6 +287,5 @@ window.addEventListener('resize', ()=>{
   }
 });
 </script>
-
 </body>
 </html>

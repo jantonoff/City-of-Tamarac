@@ -2,53 +2,34 @@
 <html>
 <head>
 <meta charset="utf-8">
-<title>Tamarac Interactive Map</title>
+<title>Tamarac Interactive Map - Full Interactive</title>
 
-<!-- Mapbox GL JS v2.15 -->
 <link href="https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.css" rel="stylesheet"/>
 <link href="https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-geocoder/v4.7.2/mapbox-gl-geocoder.css" rel="stylesheet"/>
 
 <style>
 body { margin:0; padding:0; font-family:Arial,sans-serif; }
-
 #header { position:fixed; top:0; width:100%; height:60px; background:#007ea8; color:white; display:flex; align-items:center; padding:0 20px; z-index:10; }
 #header img { height:40px; margin-right:15px; }
-
 #map { position:absolute; top:60px; bottom:0; width:100%; }
-
 #legend { position:absolute; top:80px; right:15px; background:rgba(255,255,255,0.95); padding:12px; border-radius:12px; box-shadow:0 4px 14px rgba(0,0,0,0.25); z-index:20; font-size:14px; }
 .legend-color { display:inline-block; width:14px; height:14px; background:#e63946; margin-right:6px; border-radius:3px; }
-
 .controls-container { display:flex; flex-direction:row; align-items:center; gap:4px; position:absolute; top:10px; left:10px; z-index:10; }
-
-/* Basemap Button */
 #basemap-button-container { position:absolute; bottom:50px; right:15px; z-index:15; }
 #basemap-button { width:80px; height:80px; border-radius:12px; overflow:hidden; cursor:pointer; border:2px solid #007ea8; background-size: cover; background-position: center; box-shadow:0 4px 10px rgba(0,0,0,0.35); position: relative; display:flex; align-items:center; justify-content:center; }
 #basemap-button::after { content: "▼"; position:absolute; bottom:8px; right:8px; font-size:18px; font-weight:bold; color:white; text-shadow:0 0 3px rgba(0,0,0,0.8); transition: transform 0.25s ease; }
 #basemap-button.open::after { transform: rotate(180deg); }
-
 #basemap-dropdown { display:none; position:absolute; bottom:90px; right:0; flex-direction:row; flex-wrap:wrap; gap:6px; max-width: calc(100vw - 30px); background:#fff; padding:6px; border-radius:10px; box-shadow:0 5px 15px rgba(0,0,0,0.3); opacity:0; transform:translateY(10px); transition: opacity 0.25s ease, transform 0.25s ease; }
 #basemap-dropdown.show { opacity:1; transform:translateY(0); }
-
 .basemap-card-small { width:90px; height:55px; border-radius:8px; overflow:hidden; cursor:pointer; position:relative; border:2px solid transparent; transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease; }
 .basemap-card-small:hover { transform: scale(1.05); border-color:#007ea8; box-shadow:0 6px 15px rgba(0,0,0,0.35); }
 .basemap-card-small.active { border:3px solid #007ea8; box-shadow:0 6px 15px rgba(0,0,0,0.4); transform: scale(1.05); }
 .basemap-label-small { position:absolute; bottom:4px; left:6px; color:white; font-size:11px; font-weight:bold; text-shadow:0 1px 3px rgba(0,0,0,0.8); }
 
-/* Popups */
-.custom-popup .mapboxgl-popup-content { background-color:#1f2937;color:#f9fafb;font-family:"Arial",sans-serif;font-size:14px;padding:12px;border-radius:10px;max-width:260px;max-height:320px;overflow-y:auto;box-shadow:0 6px 16px rgba(0,0,0,0.35);opacity:0;transform:translateY(10px) scale(0.95);transition:opacity 0.25s ease, transform 0.25s ease; }
-.custom-popup.mapboxgl-popup-open .mapboxgl-popup-content { opacity:1; transform:translateY(0) scale(1);}
-.custom-popup .mapboxgl-popup-tip { border-top-color:#1f2937; }
-
-.hover-popup .mapboxgl-popup-content { background-color:#111827;color:#f9fafb;font-size:12px;padding:6px 10px;border-radius:6px;max-width:180px;box-shadow:0 2px 8px rgba(0,0,0,0.3);opacity:0;transform:translateY(5px);transition:opacity 0.2s ease, transform 0.2s ease; }
-.hover-popup.mapboxgl-popup-open .mapboxgl-popup-content { opacity:1; transform:translateY(0);}
-.hover-popup .mapboxgl-popup-tip { border-top-color:#111827; }
-
+.custom-popup .mapboxgl-popup-content { background-color:#1f2937;color:#f9fafb;font-family:"Arial",sans-serif;font-size:14px;padding:12px;border-radius:10px;max-width:260px;max-height:320px;overflow-y:auto;box-shadow:0 6px 16px rgba(0,0,0,0.35); }
+.hover-popup .mapboxgl-popup-content { background-color:#111827;color:#f9fafb;font-size:12px;padding:6px 10px;border-radius:6px;max-width:180px;box-shadow:0 2px 8px rgba(0,0,0,0.3); }
 .popup-content h3 { margin:0 0 6px 0;font-size:16px;color:#fff;}
 .popup-content p { margin:0 0 8px 0;font-size:13px;color:#d1d5db;}
-.popup-content img { width:100%; max-height:150px; object-fit:cover; border-radius:6px;margin-bottom:8px;}
-.popup-content a { display:inline-block;padding:6px 12px;background:#3b82f6;color:#fff;text-decoration:none;border-radius:6px;font-weight:bold;transition: background 0.2s, transform 0.2s;}
-.popup-content a:hover { background:#2563eb; transform:translateY(-2px);}
 </style>
 </head>
 
@@ -65,14 +46,13 @@ body { margin:0; padding:0; font-family:Arial,sans-serif; }
   <span class="legend-color"></span> Tamarac City Boundary
 </div>
 
-<!-- Basemap Switcher -->
 <div id="basemap-button-container">
   <div id="basemap-button"></div>
   <div id="basemap-dropdown">
-    <div class="basemap-card-small active" data-style="mapbox://styles/mapbox/streets-v12" style="background:url('https://api.mapbox.com/styles/v1/mapbox/streets-v12/static/-80.25,26.22,11/300x150?access_token=pk.eyJ1IjoiamFudG9ub2ZmIiwiYSI6ImNtbWRsc3A1aTAwbjcycm4zaGdxem54aHAifQ.Uorza4r01TewxyZ2jCJgiQ') center/cover;"><div class="basemap-label-small">Streets</div></div>
-    <div class="basemap-card-small" data-style="mapbox://styles/mapbox/satellite-streets-v12" style="background:url('https://api.mapbox.com/styles/v1/mapbox/satellite-streets-v12/static/-80.25,26.22,11/300x150?access_token=pk.eyJ1IjoiamFudG9ub2ZmIiwiYSI6ImNtbWRsc3A1aTAwbjcycm4zaGdxem54aHAifQ.Uorza4r01TewxyZ2jCJgiQ') center/cover;"><div class="basemap-label-small">Satellite</div></div>
-    <div class="basemap-card-small" data-style="mapbox://styles/mapbox/light-v11" style="background:url('https://api.mapbox.com/styles/v1/mapbox/light-v11/static/-80.25,26.22,11/300x150?access_token=pk.eyJ1IjoiamFudG9ub2ZmIiwiYSI6ImNtbWRsc3A1aTAwbjcycm4zaGdxem54aHAifQ.Uorza4r01TewxyZ2jCJgiQ') center/cover;"><div class="basemap-label-small">Light</div></div>
-    <div class="basemap-card-small" data-style="mapbox://styles/mapbox/dark-v11" style="background:url('https://api.mapbox.com/styles/v1/mapbox/dark-v11/static/-80.25,26.22,11/300x150?access_token=pk.eyJ1IjoiamFudG9ub2ZmIiwiYSI6ImNtbWRsc3A1aTAwbjcycm4zaGdxem54aHAifQ.Uorza4r01TewxyZ2jCJgiQ') center/cover;"><div class="basemap-label-small">Dark</div></div>
+    <div class="basemap-card-small active" data-style="mapbox://styles/mapbox/streets-v12" style="background:url('https://api.mapbox.com/styles/v1/mapbox/streets-v12/static/-80.25,26.22,11/300x150?access_token=pk.eyJ1IjoiamFudG9mIiwiYSI6ImNtbWRsc3A1aTAwbjcycm4zaGdxem54aHAifQ.Uorza4r01TewxyZ2jCJgiQ') center/cover;"><div class="basemap-label-small">Streets</div></div>
+    <div class="basemap-card-small" data-style="mapbox://styles/mapbox/satellite-streets-v12" style="background:url('https://api.mapbox.com/styles/v1/mapbox/satellite-streets-v12/static/-80.25,26.22,11/300x150?access_token=pk.eyJ1IjoiamFudG9mIiwiYSI6ImNtbWRsc3A1aTAwbjcycm4zaGdxem54aHAifQ.Uorza4r01TewxyZ2jCJgiQ') center/cover;"><div class="basemap-label-small">Satellite</div></div>
+    <div class="basemap-card-small" data-style="mapbox://styles/mapbox/light-v11" style="background:url('https://api.mapbox.com/styles/v1/mapbox/light-v11/static/-80.25,26.22,11/300x150?access_token=pk.eyJ1IjoiamFudG9mIiwiYSI6ImNtbWRsc3A1aTAwbjcycm4zaGdxem54aHAifQ.Uorza4r01TewxyZ2jCJgiQ') center/cover;"><div class="basemap-label-small">Light</div></div>
+    <div class="basemap-card-small" data-style="mapbox://styles/mapbox/dark-v11" style="background:url('https://api.mapbox.com/styles/v1/mapbox/dark-v11/static/-80.25,26.22,11/300x150?access_token=pk.eyJ1IjoiamFudG9mIiwiYSI6ImNtbWRsc3A1aTAwbjcycm4zaGdxem54aHAifQ.Uorza4r01TewxyZ2jCJgiQ') center/cover;"><div class="basemap-label-small">Dark</div></div>
   </div>
 </div>
 
@@ -80,15 +60,20 @@ body { margin:0; padding:0; font-family:Arial,sans-serif; }
 <script src="https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-geocoder/v4.7.2/mapbox-gl-geocoder.min.js"></script>
 
 <script>
-mapboxgl.accessToken = 'pk.eyJ1IjoiamFudG9ub2ZmIiwiYSI6ImNtbWRsc3A1aTAwbjcycm4zaGdxem54aHAifQ.Uorza4r01TewxyZ2jCJgiQ';
+mapboxgl.accessToken = 'pk.eyJ1IjoiamFudG9mIiwiYSI6ImNtbWRsc3A1aTAwbjcycm4zaGdxem54aHAifQ';
 const geojsonURL = 'https://raw.githubusercontent.com/jantonoff/City-of-Tamarac/main/city_boundary.geojson';
+const poiData = {
+  "type": "FeatureCollection",
+  "features": [
+    { "type":"Feature", "properties":{"name":"Tamarac Community Center","type":"Facility"}, "geometry":{"type":"Point","coordinates":[-80.239,26.216]} },
+    { "type":"Feature", "properties":{"name":"Tamarac Library","type":"Library"}, "geometry":{"type":"Point","coordinates":[-80.231,26.221]} },
+    { "type":"Feature", "properties":{"name":"Tamarac Park","type":"Park"}, "geometry":{"type":"Point","coordinates":[-80.245,26.225]} }
+  ]
+};
 
-const map = new mapboxgl.Map({
-  container:'map',
-  style:'mapbox://styles/mapbox/streets-v12',
-  antialias:true
-});
+const map = new mapboxgl.Map({container:'map', style:'mapbox://styles/mapbox/streets-v12', antialias:true});
 
+// Controls
 const controlsContainer = document.createElement('div');
 controlsContainer.className='controls-container';
 const navControl = new mapboxgl.NavigationControl();
@@ -97,97 +82,205 @@ const geocoder = new MapboxGeocoder({accessToken:mapboxgl.accessToken,mapboxgl:m
 controlsContainer.appendChild(geocoder.onAdd(map));
 map.getContainer().appendChild(controlsContainer);
 
-const popup = new mapboxgl.Popup({ closeButton:true, closeOnClick:true, className:"custom-popup" });
-const hoverPopup = new mapboxgl.Popup({ closeButton:false, closeOnClick:false, className:"hover-popup" });
+const popup = new mapboxgl.Popup({closeButton:true, closeOnClick:true, className:"custom-popup"});
+const hoverPopup = new mapboxgl.Popup({closeButton:false, closeOnClick:false, className:"hover-popup"});
 
-// Add city boundary + 3D buildings
+// ------------------
+// City Polygon with hover & click
+// ------------------
 function addCityLayer() {
-  if(map.getSource('city')) return;
-  map.addSource('city',{ type:'geojson', data:geojsonURL });
-  map.addLayer({ id:'city-fill', type:'fill', source:'city', paint:{ 'fill-color':'#e63946','fill-opacity':0.5 } });
-  map.addLayer({ id:'city-outline', type:'line', source:'city', paint:{ 'line-color':'#ffffff','line-width':3 } });
-  const layers = map.getStyle().layers;
-  const labelLayerId = layers.find(l=>l.type==='symbol' && l.layout?.['text-field'])?.id;
-  map.addLayer({ id:'3d-buildings', source:'composite', 'source-layer':'building', filter:['==','extrude','true'], type:'fill-extrusion', minzoom:15, paint:{ 'fill-extrusion-color':'#aaa', 'fill-extrusion-height':['get','height'], 'fill-extrusion-base':['get','min_height'], 'fill-extrusion-opacity':0.6 }}, labelLayerId || undefined);
+    if(map.getSource('city')) return;
 
-  // Click popup for city layer
-  map.on('click','city-fill', e=>{
-    const coords = e.lngLat;
-    popup.setLngLat(coords).setHTML('<div class="popup-content"><h3>Tamarac City Boundary</h3><p>This is the Tamarac city boundary polygon.</p></div>').addTo(map);
-  });
+    map.addSource('city',{ type:'geojson', data: geojsonURL });
 
-  map.on('mouseenter','city-fill',()=>{ map.getCanvas().style.cursor='pointer'; });
-  map.on('mouseleave','city-fill',()=>{ map.getCanvas().style.cursor=''; popup.remove(); });
+    map.addLayer({
+        id:'city-fill',
+        type:'fill',
+        source:'city',
+        paint:{
+            'fill-color':'#e63946',
+            'fill-opacity':['case',['boolean',['feature-state','hover'],false],0.7,0.5]
+        }
+    });
+
+    map.addLayer({
+        id:'city-outline',
+        type:'line',
+        source:'city',
+        paint:{
+            'line-color':'#ffffff',
+            'line-width':['case',['boolean',['feature-state','hover'],false],6,3]
+        }
+    });
+
+    const layers = map.getStyle().layers;
+    const labelLayerId = layers.find(l=>l.type==='symbol' && l.layout?.['text-field'])?.id;
+    map.addLayer({
+        id:'3d-buildings',
+        source:'composite',
+        'source-layer':'building',
+        filter:['==','extrude','true'],
+        type:'fill-extrusion',
+        minzoom:15,
+        paint:{ 'fill-extrusion-color':'#aaa', 'fill-extrusion-height':['get','height'], 'fill-extrusion-base':['get','min_height'], 'fill-extrusion-opacity':0.6 }
+    }, labelLayerId || undefined);
+
+    let hoveredId = null;
+
+    // Hover glow
+    map.on('mousemove','city-fill', e=>{
+        if(e.features.length > 0){
+            if(hoveredId !== null){
+                map.setFeatureState({source:'city', id:hoveredId}, {hover:false});
+            }
+            hoveredId = e.features[0].id;
+            map.setFeatureState({source:'city', id:hoveredId}, {hover:true});
+
+            hoverPopup.setLngLat(e.lngLat)
+                      .setHTML('<strong>Tamarac City</strong>')
+                      .addTo(map);
+        }
+    });
+    map.on('mouseleave','city-fill', ()=>{
+        if(hoveredId !== null){
+            map.setFeatureState({source:'city', id:hoveredId}, {hover:false});
+        }
+        hoveredId = null;
+        hoverPopup.remove();
+    });
+
+    // Click popup
+    map.on('click','city-fill', e=>{
+        popup.setLngLat(e.lngLat)
+             .setHTML('<div class="popup-content"><h3>Tamarac City Boundary</h3><p>This is the Tamarac city boundary polygon.</p></div>')
+             .addTo(map);
+    });
 }
 
-map.on('load', async ()=>{
-  addCityLayer();
-  try{
-    const response = await fetch(geojsonURL);
-    const data = await response.json();
-    const bounds = new mapboxgl.LngLatBounds();
-    data.features.forEach(feature=>{
-      const geom = feature.geometry;
-      if(geom.type==="Polygon") geom.coordinates[0].forEach(coord=>bounds.extend(coord));
-      if(geom.type==="MultiPolygon") geom.coordinates.forEach(polygon=>polygon[0].forEach(coord=>bounds.extend(coord)));
+// ------------------
+// POI Layer with clustering
+// ------------------
+function addPOIs() {
+    if(map.getSource('pois')) return;
+    map.addSource('pois',{
+        type:'geojson',
+        data:poiData,
+        cluster:true,
+        clusterMaxZoom:14,
+        clusterRadius:50
     });
-    map.fitBounds(bounds,{ padding:60, pitch:10, bearing:0, duration:1500 });
-    setTimeout(()=>{ map.easeTo({ pitch:30, bearing:0, duration:2000 }); },1600);
-  }catch(err){ console.error("GeoJSON failed to load:",err);}
-  const activeCard = document.querySelector('.basemap-card-small.active');
-  if(activeCard) document.getElementById('basemap-button').style.backgroundImage = activeCard.style.backgroundImage;
+
+    map.addLayer({
+        id:'clusters',
+        type:'circle',
+        source:'pois',
+        filter:['has','point_count'],
+        paint:{ 'circle-color':'#1d4ed8','circle-radius':['step',['get','point_count'],15,5,20,10,25],'circle-opacity':0.7 }
+    });
+    map.addLayer({
+        id:'cluster-count',
+        type:'symbol',
+        source:'pois',
+        filter:['has','point_count'],
+        layout:{'text-field':'{point_count_abbreviated}','text-size':12,'text-font':['Arial Unicode MS Bold']},
+        paint:{'text-color':'#fff'}
+    });
+    map.addLayer({
+        id:'unclustered-point',
+        type:'circle',
+        source:'pois',
+        filter:['!','has','point_count'],
+        paint:{'circle-color':'#fbbf24','circle-radius':8,'circle-stroke-width':1,'circle-stroke-color':'#fff','circle-opacity':0.9}
+    });
+
+    map.on('mouseenter','unclustered-point', e=>{
+        map.getCanvas().style.cursor='pointer';
+        const coords = e.features[0].geometry.coordinates.slice();
+        hoverPopup.setLngLat(coords).setHTML(`<strong>${e.features[0].properties.name}</strong>`).addTo(map);
+        map.setPaintProperty('unclustered-point','circle-radius',12);
+        map.setPaintProperty('unclustered-point','circle-color','#f59e0b');
+    });
+    map.on('mouseleave','unclustered-point', e=>{
+        map.getCanvas().style.cursor='';
+        hoverPopup.remove();
+        map.setPaintProperty('unclustered-point','circle-radius',8);
+        map.setPaintProperty('unclustered-point','circle-color','#fbbf24');
+    });
+    map.on('click','unclustered-point', e=>{
+        const coords = e.features[0].geometry.coordinates.slice();
+        const props = e.features[0].properties;
+        popup.setLngLat(coords)
+             .setHTML(`<div class="popup-content"><h3>${props.name}</h3><p>Type: ${props.type}</p></div>`)
+             .addTo(map);
+    });
+    map.on('click','clusters', e=>{
+        const features = map.queryRenderedFeatures(e.point,{ layers:['clusters'] });
+        const clusterId = features[0].properties.cluster_id;
+        map.getSource('pois').getClusterExpansionZoom(clusterId,(err,zoom)=>{
+            if(err) return;
+            map.easeTo({center:features[0].geometry.coordinates, zoom:zoom, duration:1000});
+        });
+    });
+}
+
+// ------------------
+// Map load
+// ------------------
+map.on('load', async ()=>{
+    addCityLayer();
+    addPOIs();
+    try{
+        const response = await fetch(geojsonURL);
+        const data = await response.json();
+        const bounds = new mapboxgl.LngLatBounds();
+        data.features.forEach(f=>{
+            const geom=f.geometry;
+            if(geom.type==="Polygon") geom.coordinates[0].forEach(c=>bounds.extend(c));
+            if(geom.type==="MultiPolygon") geom.coordinates.forEach(p=>p[0].forEach(c=>bounds.extend(c)));
+        });
+        map.fitBounds(bounds,{ padding:60, pitch:10, bearing:0, duration:1500 });
+        setTimeout(()=>{ map.easeTo({ pitch:30, bearing:0, duration:2000 }); },1600);
+    }catch(err){ console.error(err);}
+    const activeCard = document.querySelector('.basemap-card-small.active');
+    if(activeCard) document.getElementById('basemap-button').style.backgroundImage = activeCard.style.backgroundImage;
 });
 
 // ------------------
-// Basemap Switcher Logic
+// Basemap switcher (unchanged)
 // ------------------
 const basemapButton = document.getElementById('basemap-button');
 const basemapDropdown = document.getElementById('basemap-dropdown');
 
 basemapButton.addEventListener('click', e=>{
-  e.stopPropagation();
-  const isOpen = basemapDropdown.classList.contains('show');
-  if(isOpen){
-    basemapDropdown.classList.remove('show');
-    basemapButton.classList.remove('open');
-    setTimeout(()=>{ basemapDropdown.style.display='none'; }, 250);
-  }else{
-    basemapDropdown.style.display='flex';
-    setTimeout(()=>{ basemapDropdown.classList.add('show'); }, 10);
-    basemapButton.classList.add('open');
-  }
+    e.stopPropagation();
+    const isOpen = basemapDropdown.classList.contains('show');
+    if(isOpen){ basemapDropdown.classList.remove('show'); basemapButton.classList.remove('open'); setTimeout(()=>{ basemapDropdown.style.display='none'; },250);}
+    else{ basemapDropdown.style.display='flex'; setTimeout(()=>{ basemapDropdown.classList.add('show'); },10); basemapButton.classList.add('open'); }
 });
 
 document.querySelectorAll('.basemap-card-small').forEach(card=>{
-  card.addEventListener('click', e=>{
-    e.stopPropagation();
-    document.querySelectorAll('.basemap-card-small').forEach(c=>c.classList.remove('active'));
-    card.classList.add('active');
-    map.setStyle(card.dataset.style);
-    map.once('style.load', addCityLayer);
-    basemapButton.style.backgroundImage = card.style.backgroundImage;
-    basemapDropdown.classList.remove('show');
-    basemapButton.classList.remove('open');
-    setTimeout(()=>{ basemapDropdown.style.display='none'; }, 250);
-  });
+    card.addEventListener('click', e=>{
+        e.stopPropagation();
+        document.querySelectorAll('.basemap-card-small').forEach(c=>c.classList.remove('active'));
+        card.classList.add('active');
+        map.setStyle(card.dataset.style);
+        map.once('style.load', ()=>{ addCityLayer(); addPOIs(); });
+        basemapButton.style.backgroundImage = card.style.backgroundImage;
+        basemapDropdown.classList.remove('show'); basemapButton.classList.remove('open');
+        setTimeout(()=>{ basemapDropdown.style.display='none'; },250);
+    });
 });
 
 document.addEventListener('click', e=>{
-  if(!basemapButton.contains(e.target) && !basemapDropdown.contains(e.target)){
-    if(basemapDropdown.classList.contains('show')){
-      basemapDropdown.classList.remove('show');
-      basemapButton.classList.remove('open');
-      setTimeout(()=>{ basemapDropdown.style.display='none'; }, 250);
+    if(!basemapButton.contains(e.target) && !basemapDropdown.contains(e.target)){
+        if(basemapDropdown.classList.contains('show')){
+            basemapDropdown.classList.remove('show');
+            basemapButton.classList.remove('open');
+            setTimeout(()=>{ basemapDropdown.style.display='none'; },250);
+        }
     }
-  }
 });
 
 window.addEventListener('resize', ()=>{
-  if(basemapDropdown.style.display==='flex'){
-    basemapDropdown.style.maxWidth = `${window.innerWidth-30}px`;
-  }
-});
-</script>
-
-</body>
-</html>
+    if(basemapDropdown.style.display==='flex'){
+        basemapDropdown

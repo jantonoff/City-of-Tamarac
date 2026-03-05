@@ -11,141 +11,44 @@
 <style>
 body { margin:0; padding:0; font-family:Arial,sans-serif; }
 
-/* Header */
-#header {
-  position:fixed;
-  top:0;
-  width:100%;
-  height:60px;
-  background:#007ea8;
-  color:white;
-  display:flex;
-  align-items:center;
-  padding:0 20px;
-  z-index:10;
-}
+#header { position:fixed; top:0; width:100%; height:60px; background:#007ea8; color:white; display:flex; align-items:center; padding:0 20px; z-index:10; }
 #header img { height:40px; margin-right:15px; }
 
 #map { position:absolute; top:60px; bottom:0; width:100%; }
 
-/* Legend */
-#legend {
-  position:absolute;
-  top:80px;
-  right:15px;
-  background:rgba(255,255,255,0.95);
-  padding:12px;
-  border-radius:12px;
-  box-shadow:0 4px 14px rgba(0,0,0,0.25);
-  z-index:20;
-  font-size:14px;
-}
-.legend-color {
-  display:inline-block;
-  width:14px;
-  height:14px;
-  background:#e63946;
-  margin-right:6px;
-  border-radius:3px;
-}
+#legend { position:absolute; top:80px; right:15px; background:rgba(255,255,255,0.95); padding:12px; border-radius:12px; box-shadow:0 4px 14px rgba(0,0,0,0.25); z-index:20; font-size:14px; }
+.legend-color { display:inline-block; width:14px; height:14px; background:#e63946; margin-right:6px; border-radius:3px; }
 
-/* Top-left controls container */
-.controls-container {
-  display:flex;
-  flex-direction:row;
-  align-items:center;
-  gap:4px;
-  position:absolute;
-  top:10px;
-  left:10px;
-  z-index:10;
-}
+.controls-container { display:flex; flex-direction:row; align-items:center; gap:4px; position:absolute; top:10px; left:10px; z-index:10; }
 
-/* Basemap Button (bottom right) */
-#basemap-button-container {
-  position: absolute;
-  bottom:50px; /* above Mapbox credits */
-  right:15px;
-  z-index:15;
-}
-#basemap-button {
-  width:80px;
-  height:80px;
-  border-radius:12px;
-  overflow:hidden;
-  cursor:pointer;
-  border:2px solid #007ea8;
-  background-size: cover;
-  background-position: center;
-  box-shadow:0 4px 10px rgba(0,0,0,0.35);
-  position: relative;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-}
-#basemap-button::after {
-  content: "▼";
-  position:absolute;
-  bottom:8px;
-  right:8px;
-  font-size:18px;
-  font-weight:bold;
-  color:white;
-  text-shadow:0 0 3px rgba(0,0,0,0.8);
-  transition: transform 0.25s ease;
-}
+/* Basemap Button */
+#basemap-button-container { position:absolute; bottom:50px; right:15px; z-index:15; }
+#basemap-button { width:80px; height:80px; border-radius:12px; overflow:hidden; cursor:pointer; border:2px solid #007ea8; background-size: cover; background-position: center; box-shadow:0 4px 10px rgba(0,0,0,0.35); position: relative; display:flex; align-items:center; justify-content:center; }
+#basemap-button::after { content: "▼"; position:absolute; bottom:8px; right:8px; font-size:18px; font-weight:bold; color:white; text-shadow:0 0 3px rgba(0,0,0,0.8); transition: transform 0.25s ease; }
 #basemap-button.open::after { transform: rotate(180deg); }
 
-/* Dropdown */
-#basemap-dropdown {
-  display:none;
-  position:absolute;
-  bottom:90px;
-  right:0;
-  flex-direction:row;
-  flex-wrap:wrap;
-  gap:6px;
-  max-width: calc(100vw - 30px);
-  background:#fff;
-  padding:6px;
-  border-radius:10px;
-  box-shadow:0 5px 15px rgba(0,0,0,0.3);
-  opacity:0;
-  transform:translateY(10px);
-  transition: opacity 0.25s ease, transform 0.25s ease;
-}
+#basemap-dropdown { display:none; position:absolute; bottom:90px; right:0; flex-direction:row; flex-wrap:wrap; gap:6px; max-width: calc(100vw - 30px); background:#fff; padding:6px; border-radius:10px; box-shadow:0 5px 15px rgba(0,0,0,0.3); opacity:0; transform:translateY(10px); transition: opacity 0.25s ease, transform 0.25s ease; }
 #basemap-dropdown.show { opacity:1; transform:translateY(0); }
 
-/* Basemap Cards */
-.basemap-card-small {
-  width:90px;
-  height:55px;
-  border-radius:8px;
-  overflow:hidden;
-  cursor:pointer;
-  position:relative;
-  border:2px solid transparent;
-  transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
-}
-.basemap-card-small:hover {
-  transform: scale(1.05);
-  border-color:#007ea8;
-  box-shadow:0 6px 15px rgba(0,0,0,0.35);
-}
-.basemap-card-small.active {
-  border:3px solid #007ea8;
-  box-shadow:0 6px 15px rgba(0,0,0,0.4);
-  transform: scale(1.05);
-}
-.basemap-label-small {
-  position:absolute;
-  bottom:4px;
-  left:6px;
-  color:white;
-  font-size:11px;
-  font-weight:bold;
-  text-shadow:0 1px 3px rgba(0,0,0,0.8);
-}
+.basemap-card-small { width:90px; height:55px; border-radius:8px; overflow:hidden; cursor:pointer; position:relative; border:2px solid transparent; transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease; }
+.basemap-card-small:hover { transform: scale(1.05); border-color:#007ea8; box-shadow:0 6px 15px rgba(0,0,0,0.35); }
+.basemap-card-small.active { border:3px solid #007ea8; box-shadow:0 6px 15px rgba(0,0,0,0.4); transform: scale(1.05); }
+.basemap-label-small { position:absolute; bottom:4px; left:6px; color:white; font-size:11px; font-weight:bold; text-shadow:0 1px 3px rgba(0,0,0,0.8); }
+
+/* Popups */
+.custom-popup .mapboxgl-popup-content { background-color:#1f2937;color:#f9fafb;font-family:"Arial",sans-serif;font-size:14px;padding:12px;border-radius:10px;max-width:260px;max-height:320px;overflow-y:auto;box-shadow:0 6px 16px rgba(0,0,0,0.35);opacity:0;transform:translateY(10px) scale(0.95);transition:opacity 0.25s ease, transform 0.25s ease; }
+.custom-popup.mapboxgl-popup-open .mapboxgl-popup-content { opacity:1; transform:translateY(0) scale(1);}
+.custom-popup .mapboxgl-popup-tip { border-top-color:#1f2937; }
+
+.hover-popup .mapboxgl-popup-content { background-color:#111827;color:#f9fafb;font-size:12px;padding:6px 10px;border-radius:6px;max-width:180px;box-shadow:0 2px 8px rgba(0,0,0,0.3);opacity:0;transform:translateY(5px);transition:opacity 0.2s ease, transform 0.2s ease; }
+.hover-popup.mapboxgl-popup-open .mapboxgl-popup-content { opacity:1; transform:translateY(0);}
+.hover-popup .mapboxgl-popup-tip { border-top-color:#111827; }
+
+.popup-content h3 { margin:0 0 6px 0;font-size:16px;color:#fff;}
+.popup-content p { margin:0 0 8px 0;font-size:13px;color:#d1d5db;}
+.popup-content img { width:100%; max-height:150px; object-fit:cover; border-radius:6px;margin-bottom:8px;}
+.popup-content a { display:inline-block;padding:6px 12px;background:#3b82f6;color:#fff;text-decoration:none;border-radius:6px;font-weight:bold;transition: background 0.2s, transform 0.2s;}
+.popup-content a:hover { background:#2563eb; transform:translateY(-2px);}
 </style>
 </head>
 
@@ -186,7 +89,6 @@ const map = new mapboxgl.Map({
   antialias:true
 });
 
-// Top-left controls
 const controlsContainer = document.createElement('div');
 controlsContainer.className='controls-container';
 const navControl = new mapboxgl.NavigationControl();
@@ -194,6 +96,9 @@ controlsContainer.appendChild(navControl.onAdd(map));
 const geocoder = new MapboxGeocoder({accessToken:mapboxgl.accessToken,mapboxgl:mapboxgl,placeholder:'Search Tamarac...'});
 controlsContainer.appendChild(geocoder.onAdd(map));
 map.getContainer().appendChild(controlsContainer);
+
+const popup = new mapboxgl.Popup({ closeButton:true, closeOnClick:true, className:"custom-popup" });
+const hoverPopup = new mapboxgl.Popup({ closeButton:false, closeOnClick:false, className:"hover-popup" });
 
 // Add city boundary + 3D buildings
 function addCityLayer() {
@@ -204,9 +109,17 @@ function addCityLayer() {
   const layers = map.getStyle().layers;
   const labelLayerId = layers.find(l=>l.type==='symbol' && l.layout?.['text-field'])?.id;
   map.addLayer({ id:'3d-buildings', source:'composite', 'source-layer':'building', filter:['==','extrude','true'], type:'fill-extrusion', minzoom:15, paint:{ 'fill-extrusion-color':'#aaa', 'fill-extrusion-height':['get','height'], 'fill-extrusion-base':['get','min_height'], 'fill-extrusion-opacity':0.6 }}, labelLayerId || undefined);
+
+  // Click popup for city layer
+  map.on('click','city-fill', e=>{
+    const coords = e.lngLat;
+    popup.setLngLat(coords).setHTML('<div class="popup-content"><h3>Tamarac City Boundary</h3><p>This is the Tamarac city boundary polygon.</p></div>').addTo(map);
+  });
+
+  map.on('mouseenter','city-fill',()=>{ map.getCanvas().style.cursor='pointer'; });
+  map.on('mouseleave','city-fill',()=>{ map.getCanvas().style.cursor=''; popup.remove(); });
 }
 
-// Load map & fit bounds
 map.on('load', async ()=>{
   addCityLayer();
   try{
@@ -221,7 +134,6 @@ map.on('load', async ()=>{
     map.fitBounds(bounds,{ padding:60, pitch:10, bearing:0, duration:1500 });
     setTimeout(()=>{ map.easeTo({ pitch:30, bearing:0, duration:2000 }); },1600);
   }catch(err){ console.error("GeoJSON failed to load:",err);}
-  // Initialize basemap button preview
   const activeCard = document.querySelector('.basemap-card-small.active');
   if(activeCard) document.getElementById('basemap-button').style.backgroundImage = activeCard.style.backgroundImage;
 });
@@ -232,7 +144,6 @@ map.on('load', async ()=>{
 const basemapButton = document.getElementById('basemap-button');
 const basemapDropdown = document.getElementById('basemap-dropdown');
 
-// Toggle dropdown
 basemapButton.addEventListener('click', e=>{
   e.stopPropagation();
   const isOpen = basemapDropdown.classList.contains('show');
@@ -247,7 +158,6 @@ basemapButton.addEventListener('click', e=>{
   }
 });
 
-// Select basemap
 document.querySelectorAll('.basemap-card-small').forEach(card=>{
   card.addEventListener('click', e=>{
     e.stopPropagation();
@@ -262,7 +172,6 @@ document.querySelectorAll('.basemap-card-small').forEach(card=>{
   });
 });
 
-// Close dropdown clicking outside
 document.addEventListener('click', e=>{
   if(!basemapButton.contains(e.target) && !basemapDropdown.contains(e.target)){
     if(basemapDropdown.classList.contains('show')){
@@ -273,7 +182,6 @@ document.addEventListener('click', e=>{
   }
 });
 
-// Responsive
 window.addEventListener('resize', ()=>{
   if(basemapDropdown.style.display==='flex'){
     basemapDropdown.style.maxWidth = `${window.innerWidth-30}px`;
@@ -283,4 +191,3 @@ window.addEventListener('resize', ()=>{
 
 </body>
 </html>
-

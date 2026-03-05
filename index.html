@@ -47,11 +47,11 @@ body { margin:0; padding:0; font-family:Arial,sans-serif; }
   border-radius:3px;
 }
 
-/* BASEMAP DROPDOWN BUTTON */
+/* BASEMAP DROPDOWN BUTTON - BOTTOM RIGHT */
 #basemap-button-container {
   position: absolute;
-  top:10px;
-  left:10px;
+  bottom:50px; /* leave space above Mapbox credits */
+  right:15px;
   z-index:15;
 }
 
@@ -65,13 +65,31 @@ body { margin:0; padding:0; font-family:Arial,sans-serif; }
   background-size: cover;
   background-position: center;
   box-shadow:0 3px 8px rgba(0,0,0,0.3);
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+#basemap-button::after {
+  content: "▼";
+  position: absolute;
+  bottom:4px;
+  right:4px;
+  font-size:12px;
+  color:white;
+  transition: transform 0.2s ease;
+}
+
+#basemap-button.open::after {
+  transform: rotate(180deg);
 }
 
 #basemap-dropdown {
   display: none;
   position: absolute;
-  top:55px;
-  left:0;
+  bottom:55px; /* above main button */
+  right:0;
   flex-direction: column;
   gap:6px;
   background:#fff;
@@ -166,7 +184,7 @@ controlsContainer.style.alignItems = 'center';
 controlsContainer.style.gap = '4px';
 controlsContainer.style.position = 'absolute';
 controlsContainer.style.top = '10px';
-controlsContainer.style.left = '70px'; // offset from basemap button
+controlsContainer.style.left = '10px';
 controlsContainer.style.zIndex = '10';
 
 // Zoom/navigation
@@ -249,7 +267,9 @@ basemapButton.style.backgroundImage = document.querySelector('.basemap-card-smal
 
 // Toggle dropdown
 basemapButton.addEventListener('click', ()=> {
-  basemapDropdown.style.display = basemapDropdown.style.display==='flex'?'none':'flex';
+  const isOpen = basemapDropdown.style.display==='flex';
+  basemapDropdown.style.display = isOpen?'none':'flex';
+  basemapButton.classList.toggle('open', !isOpen);
 });
 
 // Select basemap
@@ -260,6 +280,7 @@ document.querySelectorAll('.basemap-card-small').forEach(card=>{
     map.setStyle(style);
     basemapButton.style.backgroundImage = this.style.backgroundImage; // update button preview
     basemapDropdown.style.display='none';
+    basemapButton.classList.remove('open');
     map.once('style.load', addCityLayer);
   });
 });
@@ -268,6 +289,7 @@ document.querySelectorAll('.basemap-card-small').forEach(card=>{
 document.addEventListener('click', e=>{
   if(!basemapButton.contains(e.target) && !basemapDropdown.contains(e.target)){
     basemapDropdown.style.display='none';
+    basemapButton.classList.remove('open');
   }
 });
 </script>

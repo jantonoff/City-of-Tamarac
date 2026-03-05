@@ -228,7 +228,7 @@ map.fitBounds(bounds, {
 setTimeout(()=>{
   map.easeTo({
     pitch: 30,      // mild tilt
-    bearing: -25,   // slight rotation
+    bearing: 0,   // slight rotation
     duration: 2000
   });
 }, 1600); // slightly after fitBounds duration
@@ -253,3 +253,4 @@ document.querySelectorAll('.basemap-card').forEach(card=>{
 
 </body>
 </html>
+

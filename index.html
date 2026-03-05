@@ -4,133 +4,79 @@
 <meta charset="utf-8">
 <title>Tamarac Interactive Map</title>
 
-<link href="https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.css" rel="stylesheet"/>
-<link href="https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-geocoder/v4.7.2/mapbox-gl-geocoder.css" rel="stylesheet"/>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<link href="https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.css" rel="stylesheet">
+<link href="https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-geocoder/v4.7.2/mapbox-gl-geocoder.css" rel="stylesheet">
+
+<script src="https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.js"></script>
+<script src="https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-geocoder/v4.7.2/mapbox-gl-geocoder.min.js"></script>
 
 <style>
 
-html,body{
-height:100%;
+body{
 margin:0;
 padding:0;
-font-family:Arial,sans-serif;
-}
-
-#header{
-position:fixed;
-top:0;
-width:100%;
-height:60px;
-background:#007ea8;
-color:white;
-display:flex;
-align-items:center;
-padding:0 20px;
-z-index:10;
-}
-
-#header img{
-height:40px;
-margin-right:15px;
+font-family:Arial, Helvetica, sans-serif;
 }
 
 #map{
 position:absolute;
-top:60px;
+top:0;
 bottom:0;
 width:100%;
 }
 
-.controls-container{
-display:flex;
-gap:6px;
+/* SEARCH + ZOOM CONTAINER */
+
+#controls{
 position:absolute;
 top:10px;
 left:10px;
-z-index:10;
-}
-
-#legend{
-position:absolute;
-top:80px;
-right:15px;
-background:white;
-padding:12px;
-border-radius:10px;
-box-shadow:0 3px 12px rgba(0,0,0,.25);
-font-size:14px;
-}
-
-.legend-color{
-width:14px;
-height:14px;
-display:inline-block;
-background:#e63946;
-margin-right:6px;
-border-radius:3px;
-}
-
-/* basemap button */
-
-#basemap-button-container{
-position:absolute;
-bottom:50px;
-right:15px;
-z-index:10;
-}
-
-#basemap-button{
-width:80px;
-height:80px;
-border-radius:12px;
-border:2px solid #007ea8;
-cursor:pointer;
-background-size:cover;
-background-position:center;
-box-shadow:0 4px 12px rgba(0,0,0,.4);
-}
-
-#basemap-dropdown{
-display:none;
-position:absolute;
-bottom:90px;
-right:0;
-background:white;
-padding:6px;
-border-radius:10px;
-box-shadow:0 4px 15px rgba(0,0,0,.3);
+display:flex;
+flex-direction:column;
 gap:6px;
-flex-wrap:wrap;
+z-index:1;
 }
 
-.basemap-card{
-width:90px;
-height:55px;
-border-radius:8px;
+/* BASEMAP BUTTON */
+
+#basemap-btn{
+background:white;
+border-radius:6px;
+border:none;
+width:34px;
+height:34px;
+font-size:16px;
 cursor:pointer;
-background-size:cover;
-background-position:center;
-position:relative;
-border:2px solid transparent;
+box-shadow:0 0 4px rgba(0,0,0,.2);
 }
 
-.basemap-card.active{
-border:3px solid #007ea8;
-}
+/* BASEMAP MENU */
 
-.basemap-label{
+#basemap-menu{
 position:absolute;
-bottom:4px;
-left:6px;
-font-size:11px;
-color:white;
-font-weight:bold;
-text-shadow:0 1px 3px black;
+top:50px;
+left:10px;
+background:white;
+border-radius:6px;
+box-shadow:0 2px 6px rgba(0,0,0,.3);
+display:none;
+overflow:hidden;
 }
 
-.mapboxgl-popup-content{
-border-radius:8px;
-font-family:Arial;
+#basemap-menu button{
+display:block;
+width:120px;
+padding:8px;
+border:none;
+background:white;
+cursor:pointer;
+text-align:left;
+}
+
+#basemap-menu button:hover{
+background:#eee;
 }
 
 </style>
@@ -138,274 +84,149 @@ font-family:Arial;
 
 <body>
 
-<div id="header">
-<img src="https://www.tamarac.gov/ImageRepository/Document?documentID=7127">
-<h2>Tamarac Interactive Map</h2>
-</div>
-
 <div id="map"></div>
 
-<div id="legend">
-<strong>Legend</strong><br>
-<span class="legend-color"></span> Tamarac Boundary
+<div id="controls"></div>
+
+<button id="basemap-btn">🗺</button>
+
+<div id="basemap-menu">
+<button data-style="mapbox://styles/mapbox/streets-v12">Streets</button>
+<button data-style="mapbox://styles/mapbox/light-v11">Light</button>
+<button data-style="mapbox://styles/mapbox/satellite-streets-v12">Satellite</button>
+<button data-style="mapbox://styles/mapbox/outdoors-v12">Outdoors</button>
 </div>
-
-<div id="basemap-button-container">
-
-<div id="basemap-button"></div>
-
-<div id="basemap-dropdown">
-
-<div class="basemap-card active"
-data-style="mapbox://styles/mapbox/streets-v12"
-style="background-image:url('https://api.mapbox.com/styles/v1/mapbox/streets-v12/static/-80.25,26.22,11/200x120?access_token=pk.eyJ1IjoiamFudG9ub2ZmIiwiYSI6ImNtbWRwYTZkNzA1ajAycnB4YTc5NW01MTEifQ.IjJ-GvsLrmiP3OUq_e4DyQ');">
-<div class="basemap-label">Streets</div>
-</div>
-
-<div class="basemap-card"
-data-style="mapbox://styles/mapbox/satellite-streets-v12"
-style="background-image:url('https://api.mapbox.com/styles/v1/mapbox/satellite-streets-v12/static/-80.25,26.22,11/200x120?access_token=pk.eyJ1IjoiamFudG9ub2ZmIiwiYSI6ImNtbWRwYTZkNzA1ajAycnB4YTc5NW01MTEifQ.IjJ-GvsLrmiP3OUq_e4DyQ');">
-<div class="basemap-label">Satellite</div>
-</div>
-
-<div class="basemap-card"
-data-style="mapbox://styles/mapbox/light-v11"
-style="background-image:url('https://api.mapbox.com/styles/v1/mapbox/light-v11/static/-80.25,26.22,11/200x120?access_token=pk.eyJ1IjoiamFudG9ub2ZmIiwiYSI6ImNtbWRwYTZkNzA1ajAycnB4YTc5NW01MTEifQ.IjJ-GvsLrmiP3OUq_e4DyQ');">
-<div class="basemap-label">Light</div>
-</div>
-
-<div class="basemap-card"
-data-style="mapbox://styles/mapbox/dark-v11"
-style="background-image:url('https://api.mapbox.com/styles/v1/mapbox/dark-v11/static/-80.25,26.22,11/200x120?access_token=pk.eyJ1IjoiamFudG9ub2ZmIiwiYSI6ImNtbWRwYTZkNzA1ajAycnB4YTc5NW01MTEifQ.IjJ-GvsLrmiP3OUq_e4DyQ');">
-<div class="basemap-label">Dark</div>
-</div>
-
-</div>
-</div>
-
-<script src="https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.js"></script>
-<script src="https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-geocoder/v4.7.2/mapbox-gl-geocoder.min.js"></script>
 
 <script>
 
-mapboxgl.accessToken='pk.eyJ1IjoiamFudG9ub2ZmIiwiYSI6ImNtbWRwYTZkNzA1ajAycnB4YTc5NW01MTEifQ.IjJ-GvsLrmiP3OUq_e4DyQ';
+mapboxgl.accessToken = 'pk.eyJ1IjoiamFudG9ub2ZmIiwiYSI6ImNtbWRwYTZkNzA1ajAycnB4YTc5NW01MTEifQ.IjJ-GvsLrmiP3OUq_e4DyQ';
 
-const geojsonURL='https://raw.githubusercontent.com/jantonoff/City-of-Tamarac/main/city_boundary.geojson';
 
-const poiData={
-"type":"FeatureCollection",
-"features":[
-{"type":"Feature","properties":{"name":"Tamarac Community Center","type":"Facility"},"geometry":{"type":"Point","coordinates":[-80.239,26.216]}},
-{"type":"Feature","properties":{"name":"Tamarac Library","type":"Library"},"geometry":{"type":"Point","coordinates":[-80.231,26.221]}},
-{"type":"Feature","properties":{"name":"Tamarac Park","type":"Park"},"geometry":{"type":"Point","coordinates":[-80.245,26.225]}}
-]
-};
-
-const map=new mapboxgl.Map({
+const map = new mapboxgl.Map({
 container:'map',
 style:'mapbox://styles/mapbox/streets-v12',
-center:[-80.25,26.22],
-zoom:11,
-pitch:30
+center:[-80.2498,26.2129],
+zoom:15,
+pitch:60,
+bearing:-10,
+antialias:true
 });
 
-const nav=new mapboxgl.NavigationControl();
-const geocoder=new MapboxGeocoder({
+
+/* ZOOM CONTROLS */
+
+map.addControl(new mapboxgl.NavigationControl(),'top-left');
+
+
+/* SEARCH BAR */
+
+const geocoder = new MapboxGeocoder({
 accessToken:mapboxgl.accessToken,
 mapboxgl:mapboxgl,
-placeholder:"Search Tamarac..."
+placeholder:"Search address"
 });
 
-const controlsContainer=document.createElement('div');
-controlsContainer.className='controls-container';
-controlsContainer.appendChild(nav.onAdd(map));
-controlsContainer.appendChild(geocoder.onAdd(map));
-map.getContainer().appendChild(controlsContainer);
+map.addControl(geocoder,'top-left');
 
-let cityData=null;
 
-async function loadCity(){
+/* ADD TERRAIN + BUILDINGS */
 
-const r=await fetch(geojsonURL);
-cityData=await r.json();
+map.on('load', () => {
 
-cityData.features.forEach((f,i)=>f.id=i);
+map.addSource('mapbox-dem',{
+'type':'raster-dem',
+'url':'mapbox://mapbox.mapbox-terrain-dem-v1',
+'tileSize':512,
+'maxzoom':14
+});
 
+map.setTerrain({
+'source':'mapbox-dem',
+'exaggeration':1.2
+});
+
+add3DBuildings();
+
+});
+
+
+function add3DBuildings(){
+
+const layers = map.getStyle().layers;
+
+let labelLayerId;
+
+for (const layer of layers) {
+if (layer.type === 'symbol' && layer.layout['text-field']) {
+labelLayerId = layer.id;
+break;
 }
-
-function addCityLayer(){
-
-map.addSource('city',{type:'geojson',data:cityData});
+}
 
 map.addLayer({
-id:'city-fill',
-type:'fill',
-source:'city',
-paint:{
-'fill-color':'#e63946',
-'fill-opacity':0.4
+'id':'3d-buildings',
+'source':'composite',
+'source-layer':'building',
+'filter':['==','extrude','true'],
+'type':'fill-extrusion',
+'minzoom':15,
+'paint':{
+'fill-extrusion-color':'#aaa',
+'fill-extrusion-height':['get','height'],
+'fill-extrusion-base':['get','min_height'],
+'fill-extrusion-opacity':0.6
 }
-});
-
-map.addLayer({
-id:'city-outline',
-type:'line',
-source:'city',
-paint:{
-'line-color':'white',
-'line-width':3
-}
-});
+},labelLayerId);
 
 }
 
-function addPOIs(){
 
-map.addSource('pois',{
-type:'geojson',
-data:poiData,
-cluster:true,
-clusterMaxZoom:14,
-clusterRadius:50
-});
+/* BASEMAP SWITCHER */
 
-map.addLayer({
-id:'clusters',
-type:'circle',
-source:'pois',
-filter:['has','point_count'],
-paint:{
-'circle-color':'#1d4ed8',
-'circle-radius':['step',['get','point_count'],15,5,20,10,25]
-}
-});
+const basemapBtn = document.getElementById("basemap-btn");
+const basemapMenu = document.getElementById("basemap-menu");
 
-map.addLayer({
-id:'cluster-count',
-type:'symbol',
-source:'pois',
-filter:['has','point_count'],
-layout:{
-'text-field':'{point_count_abbreviated}',
-'text-size':12
-}
-});
+basemapBtn.onclick = () => {
 
-map.addLayer({
-id:'unclustered',
-type:'circle',
-source:'pois',
-filter:['!','has','point_count'],
-paint:{
-'circle-color':'#fbbf24',
-'circle-radius':8,
-'circle-stroke-width':1,
-'circle-stroke-color':'white'
-}
-});
+basemapMenu.style.display =
+basemapMenu.style.display === "block"
+? "none"
+: "block";
 
-}
+};
 
-function addInteractions(){
 
-const popup=new mapboxgl.Popup();
+document.querySelectorAll("#basemap-menu button").forEach(button => {
 
-map.on('click','unclustered',e=>{
+button.onclick = () => {
 
-const p=e.features[0].properties;
-
-popup
-.setLngLat(e.features[0].geometry.coordinates)
-.setHTML(`<b>${p.name}</b><br>${p.type}`)
-.addTo(map);
-
-});
-
-map.on('click','clusters',e=>{
-
-const features=map.queryRenderedFeatures(e.point,{layers:['clusters']});
-
-const clusterId=features[0].properties.cluster_id;
-
-map.getSource('pois').getClusterExpansionZoom(clusterId,(err,zoom)=>{
-
-if(err)return;
-
-map.easeTo({
-center:features[0].geometry.coordinates,
-zoom:zoom
-});
-
-});
-
-});
-
-}
-
-function initializeLayers(){
-
-addCityLayer();
-addPOIs();
-addInteractions();
-
-const bounds=new mapboxgl.LngLatBounds();
-
-cityData.features.forEach(f=>{
-f.geometry.coordinates[0].forEach(c=>{
-bounds.extend(c);
-});
-});
-
-map.fitBounds(bounds,{padding:60});
-
-}
-
-map.on('load',async()=>{
-
-await loadCity();
-
-initializeLayers();
-
-const active=document.querySelector('.basemap-card.active');
-document.getElementById('basemap-button').style.backgroundImage=active.style.backgroundImage;
-
-});
-
-document.querySelectorAll('.basemap-card').forEach(card=>{
-
-card.onclick=()=>{
-
-const style=card.dataset.style;
+const style = button.dataset.style;
 
 map.setStyle(style);
 
-map.once('style.load',()=>{
+basemapMenu.style.display = "none";
 
-initializeLayers();
+map.once('style.load', () => {
+
+map.addSource('mapbox-dem',{
+'type':'raster-dem',
+'url':'mapbox://mapbox.mapbox-terrain-dem-v1',
+'tileSize':512,
+'maxzoom':14
+});
+
+map.setTerrain({
+'source':'mapbox-dem',
+'exaggeration':1.2
+});
+
+add3DBuildings();
 
 });
 
-document.querySelectorAll('.basemap-card').forEach(c=>c.classList.remove('active'));
-
-card.classList.add('active');
-
-document.getElementById('basemap-button').style.backgroundImage=card.style.backgroundImage;
-
 };
 
 });
-
-const button=document.getElementById('basemap-button');
-const dropdown=document.getElementById('basemap-dropdown');
-
-button.onclick=e=>{
-e.stopPropagation();
-dropdown.style.display=dropdown.style.display==='flex'?'none':'flex';
-};
-
-document.onclick=()=>{
-dropdown.style.display='none';
-};
 
 </script>
 
